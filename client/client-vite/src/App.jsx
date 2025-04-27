@@ -4,6 +4,8 @@ import Home from './components/Home';
 import Navbar from './components/layout/Navbar';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import AccountSettings from './components/auth/AccountSettings';
+import FreelancerProfile from './components/auth/FreelancerProfile';
 import Profile from './components/auth/Profile';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import './App.css';
@@ -38,11 +40,21 @@ function App() {
                 </div>
               } 
             />
+            {/* Account settings route that all logged in users can access */}
+            <Route 
+              path="/account" 
+              element={
+                <ProtectedRoute>
+                  <AccountSettings />
+                </ProtectedRoute>
+              } 
+            />
+            {/* Freelancer profile route that only freelancers can access */}
             <Route 
               path="/profile" 
               element={
                 <ProtectedRoute>
-                  <Profile />
+                  <FreelancerProfile />
                 </ProtectedRoute>
               } 
             />

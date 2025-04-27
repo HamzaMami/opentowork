@@ -30,7 +30,8 @@ const Login = () => {
     
     try {
       await login(formData.email, formData.password);
-      navigate('/profile');
+      // Redirect to home page after successful login
+      navigate('/');
     } catch (error) {
       setFormError(error.response?.data?.message || 'Login failed. Please check your credentials.');
     }

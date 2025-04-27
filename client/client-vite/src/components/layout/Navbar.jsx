@@ -42,7 +42,8 @@ function Navbar() {
               <Link to="/jobs" className={`navbar-link ${isActive('/jobs')}`}>
                 Jobs
               </Link>
-              {user && (
+              {/* Show Profile link only for freelancers */}
+              {user && user.role === 'freelancer' && (
                 <Link to="/profile" className={`navbar-link ${isActive('/profile')}`}>
                   Profile
                 </Link>
@@ -57,8 +58,9 @@ function Navbar() {
               {user ? (
                 <>
                   <div className="navbar-user">
-                    <span className="navbar-username">Hi, {user.name.split(' ')[0]}</span>
-                    <span className="navbar-role">{user.role}</span>
+                    <Link to="/account" className="navbar-username-link">
+                      <span className="navbar-username">Hi, {user.name.split(' ')[0]}</span>
+                    </Link>
                   </div>
                   <Button onClick={handleLogout} variant="outline" className="logout-button">
                     Logout

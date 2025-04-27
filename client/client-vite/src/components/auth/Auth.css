@@ -168,3 +168,181 @@
   color: var(--color-muted-foreground);
   font-weight: normal;
 }
+
+/* Freelancer Profile Styles */
+.freelancer-profile-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.freelancer-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.freelancer-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0;
+}
+
+.freelancer-title {
+  font-size: 1.125rem;
+  color: var(--color-muted-foreground);
+  font-weight: 500;
+  margin: 0;
+}
+
+.freelancer-section {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-foreground);
+}
+
+.freelancer-bio {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-foreground);
+  white-space: pre-line;
+}
+
+.freelancer-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.skill-tag {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.freelancer-rate {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.freelancer-experience,
+.freelancer-education {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.freelancer-portfolio {
+  color: var(--color-primary);
+  word-break: break-all;
+}
+
+.freelancer-portfolio:hover {
+  text-decoration: underline;
+}
+
+.form-hint {
+  display: block;
+  color: var(--color-muted-foreground);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.textarea-input {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-input-border);
+  padding: 0.65rem;
+  background-color: var(--color-input-background);
+  color: var(--color-input-foreground);
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.textarea-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.navbar-username-link {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.navbar-username-link:hover {
+  opacity: 0.8;
+}
+
+/* Role Selector Styles */
+.role-selector {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .role-selector {
+    flex-direction: column;
+  }
+}
+
+.role-button {
+  flex: 1;
+  padding: 1.25rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.role-button:hover {
+  border-color: var(--color-primary);
+  background-color: rgba(56, 189, 248, 0.05);
+}
+
+.role-button-active {
+  border-color: var(--color-primary);
+  background-color: rgba(56, 189, 248, 0.1);
+}
+
+.role-button-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.role-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.role-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.role-description {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+}

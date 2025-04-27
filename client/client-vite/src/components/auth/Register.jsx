@@ -15,6 +15,7 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'client', // Default role is client
   });
   
   const [formError, setFormError] = useState('');
@@ -23,6 +24,13 @@ const Register = () => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    });
+  };
+  
+  const handleRoleChange = (role) => {
+    setFormData({
+      ...formData,
+      role,
     });
   };
   
@@ -38,7 +46,7 @@ const Register = () => {
     
     try {
       // Remove confirmPassword before sending to API
-      const {  ...userData } = formData;
+      const { confirmPassword, ...userData } = formData;
       await register(userData);
       navigate('/profile');
     } catch (error) {
@@ -86,6 +94,35 @@ const Register = () => {
                 required
                 placeholder="Enter your email"
               />
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">I want to join as</label>
+              <div className="role-selector">
+                <button
+                  type="button"
+                  className={`role-button ${formData.role === 'client' ? 'role-button-active' : ''}`}
+                  onClick={() => handleRoleChange('client')}
+                >
+                  <div className="role-button-content">
+                    <span className="role-icon">👤</span>
+                    <span className="role-name">Client</span>
+                    <span className="role-description">Hire talent and post jobs</span>
+                  </div>
+                </button>
+                
+                <button
+                  type="button"
+                  className={`role-button ${formData.role === 'freelancer' ? 'role-button-active' : ''}`}
+                  onClick={() => handleRoleChange('freelancer')}
+                >
+                  <div className="role-button-content">
+                    <span className="role-icon">👨‍💻</span>
+                    <span className="role-name">Freelancer</span>
+                    <span className="role-description">Offer services and find work</span>
+                  </div>
+                </button>
+              </div>
             </div>
             
             <div className="form-group">
