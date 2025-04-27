@@ -1,0 +1,81 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.placeholder-page {
+  background-color: #3a3f4b;
+  border-radius: 10px;
+  padding: 40px 20px;
+  margin-top: 40px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  color: white;
+}
+
+.placeholder-page h1 {
+  color: #61dafb;
+  margin-bottom: 20px;
+}
+
+.placeholder-page p {
+  font-size: 1.2rem;
+}
+
+.app-container {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.page-container {
+  padding: 3rem 1rem;
+  max-width: 56rem; /* ~896px */
+}
+
+.page-container-sm {
+  padding: 3rem 1rem;
+  max-width: 28rem; /* ~448px */
+}
+
+.content-card {
+  background-color: white;
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.dark .content-card {
+  background-color: #1e293b; /* slate-800 */
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+
+.page-text {
+  font-size: 1.125rem;
+  color: var(--color-foreground);
+}
+
+.dark .page-text {
+  color: #cbd5e1; /* slate-300 */
+}

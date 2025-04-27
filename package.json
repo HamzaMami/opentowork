@@ -1,0 +1,18 @@
+{
+  "name": "open_to_work",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "client": "npm run dev --prefix client/client-vite",
+    "server": "nodemon back/server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "devDependencies": {},
+  "description": ""
+}
