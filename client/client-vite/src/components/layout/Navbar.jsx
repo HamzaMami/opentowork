@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import './Navbar.css';
 
 function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, clientProfile, freelancerProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -13,7 +13,16 @@ function Navbar() {
     navigate('/');
   };
   
-  // Function to check if a path is active
+  const getProfileImage = () => {
+    if (!user) return null;
+    const profile = user.role === 'client' ? clientProfile : freelancerProfile;
+    if (!profile?.profileImage) return null;
+
+    return profile.profileImage.startsWith('http') 
+      ? profile.profileImage 
+      : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${profile.profileImage}`;
+  };
+
   const isActive = (path) => {
     return location.pathname === path ? 'navbar-link-active' : '';
   };
@@ -22,16 +31,13 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-content">
-          {/* Logo on the left */}
           <div className="navbar-left">
             <Link to="/" className="navbar-logo">
               <span>OpenToWork</span>
             </Link>
           </div>
           
-          {/* Navigation links and buttons on the right */}
           <div className="navbar-right">
-            {/* Navigation Links */}
             <div className="navbar-links">
               <Link to="/" className={`navbar-link ${isActive('/')}`}>
                 Home
@@ -42,10 +48,9 @@ function Navbar() {
               <Link to="/jobs" className={`navbar-link ${isActive('/jobs')}`}>
                 Jobs
               </Link>
-              {/* Show Profile link only for freelancers */}
-              {user && user.role === 'freelancer' && (
+              {user && (
                 <Link to="/profile" className={`navbar-link ${isActive('/profile')}`}>
-                  Profile
+                  My Profile
                 </Link>
               )}
               <Link to="/contact" className={`navbar-link ${isActive('/contact')}`}>
@@ -53,13 +58,26 @@ function Navbar() {
               </Link>
             </div>
             
-            {/* Auth Buttons */}
             <div className="auth-buttons">
               {user ? (
                 <>
                   <div className="navbar-user">
-                    <Link to="/account" className="navbar-username-link">
-                      <span className="navbar-username">Hi, {user.name.split(' ')[0]}</span>
+                    <Link to="/account" className="navbar-profile-container">
+                      {getProfileImage() ? (
+                        <img 
+                          src={getProfileImage()} 
+                          alt={user.name} 
+                          className="navbar-profile-image"
+                        />
+                      ) : (
+                        <div className="navbar-profile-placeholder">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="navbar-user-info">
+                        <span className="navbar-username">{user.name}</span>
+                        <span className="navbar-role">{user.role}</span>
+                      </div>
                     </Link>
                   </div>
                   <Button onClick={handleLogout} variant="outline" className="logout-button">

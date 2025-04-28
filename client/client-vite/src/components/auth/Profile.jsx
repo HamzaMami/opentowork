@@ -1,239 +1,217 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import './Auth.css';
+import ProfileImageUploader from './ProfileImageUploader';
+import './Profile.css';
 
 const Profile = () => {
-  const { user, updateProfile, logout, loading, error } = useAuth();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const { user, loading, error, clientProfile, freelancerProfile, updateClientProfile, updateFreelancerProfile } = useAuth();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  
-  // Set form data when user data is available
-  useEffect(() => {
-    if (user) {
+  const [formData, setFormData] = useState({ companyName: '', title: '', skills: '', bio: '', profileImage: null });
+  const [imagePreview, setImagePreview] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
+  const getFullImageUrl = (imagePath) => imagePath?.startsWith('http')
+    ? imagePath
+    : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+
+  const loadProfile = useCallback(() => {
+    if (!user) return;
+
+    if (user.role === 'client' && clientProfile) {
       setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        username: user.username || '',
-        password: '',
-        confirmPassword: '',
+        companyName: clientProfile.companyName || '',
+        title: clientProfile.title || '',
+        skills: '',
+        bio: clientProfile.bio || '',
+        profileImage: null,
       });
+      if (clientProfile.profileImage) {
+        setImagePreview(getFullImageUrl(clientProfile.profileImage));
+      } else {
+        setImagePreview(null);
+      }
+      setRemoveImage(false);
+    } else if (user.role === 'freelancer' && freelancerProfile) {
+      setFormData({
+        companyName: '',
+        title: '',
+        skills: freelancerProfile.skills || '',
+        bio: freelancerProfile.bio || '',
+        profileImage: null,
+      });
+      if (freelancerProfile.profileImage) {
+        setImagePreview(getFullImageUrl(freelancerProfile.profileImage));
+      } else {
+        setImagePreview(null);
+      }
+      setRemoveImage(false);
     }
-  }, [user]);
-  
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  }, [user, clientProfile, freelancerProfile]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
+
+  const handleImageRemove = () => {
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, profileImage: null }));
+    setRemoveImage(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setFormError('');
-    setSuccess('');
-    
-    // Validate password match if provided
-    if (formData.password && formData.password !== formData.confirmPassword) {
-      setFormError('Passwords do not match');
-      return;
-    }
-    
+  
     try {
-      // Only include password if it was changed
-      const updateData = {
-        name: formData.name,
-        username: formData.username,
-        email: formData.email,
-      };
-      
-      if (formData.password) {
-        updateData.password = formData.password;
+      const dataToSend = new FormData();
+      dataToSend.append('bio', formData.bio);
+  
+      if (user.role === 'client') {
+        dataToSend.append('companyName', formData.companyName);
+        dataToSend.append('title', formData.title);
+      } else if (user.role === 'freelancer') {
+        dataToSend.append('skills', formData.skills);
+      }
+  
+      if (formData.profileImage) {
+        dataToSend.append('profileImage', formData.profileImage);
       }
       
-      await updateProfile(updateData);
-      setSuccess('Profile updated successfully');
-      setIsEditing(false);
-      
-      // Clear password fields
-      setFormData({
-        ...formData,
-        password: '',
-        confirmPassword: '',
-      });
+      // Only append removeImage if it's true
+      if (removeImage) {
+        dataToSend.append('removeImage', 'true');
+      }
+  
+      if (user.role === 'client') {
+        await updateClientProfile(dataToSend);
+      } else {
+        await updateFreelancerProfile(dataToSend);
+      }
+  
+      setSuccess('Profile updated successfully!');
+      loadProfile(); // Refresh data
     } catch (error) {
-      setFormError(error.response?.data?.message || 'Profile update failed. Please try again.');
+      console.error(error);
+      setFormError(error.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
-  if (!user) {
-    return <div className="auth-container">Loading profile...</div>;
-  }
-  
+
+
+  if (!user) return <div className="profile-container">Loading profile...</div>;
+
   return (
-    <div className="auth-container">
-      <Card className="auth-card">
+    <div className="profile-container">
+      <Card className="profile-card">
         <CardHeader>
-          <CardTitle className="auth-title">Your Profile</CardTitle>
-          <CardDescription>View and manage your account information</CardDescription>
+          <CardTitle>{user.role === 'client' ? 'Client Profile' : 'Freelancer Profile'}</CardTitle>
+          <CardDescription>
+            {user.role === 'client' 
+              ? 'Manage your client information and company details' 
+              : 'Showcase your skills and expertise to potential clients'}
+          </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
-          {error && <div className="auth-error">{error}</div>}
-          {formError && <div className="auth-error">{formError}</div>}
-          {success && <div className="auth-success">{success}</div>}
-          
-          <div className="profile-info">
-            <div className="profile-header">
-              <h2 className="profile-name">{user.name}</h2>
-              <span className="profile-role">{user.role}</span>
-            </div>
-            
-            {!isEditing ? (
-              <>
-                <div className="profile-details">
-                  <div className="profile-detail">
-                    <span className="detail-label">Email:</span>
-                    <span className="detail-value">{user.email}</span>
-                  </div>
-                  <div className="profile-detail">
-                    <span className="detail-label">Username:</span>
-                    <span className="detail-value">{user.username}</span>
-                  </div>
-                </div>
-                
-                <div className="profile-actions">
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    variant="outline"
-                    className="profile-button"
-                  >
-                    Edit Profile
-                  </Button>
-                  <Button
-                    onClick={logout}
-                    variant="destructive"
-                    className="profile-button"
-                  >
-                    Logout
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <form onSubmit={handleSubmit} className="auth-form">
-                <div className="form-group">
-                  <label htmlFor="name" className="form-label">Full Name</label>
-                  <Input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="username" className="form-label">Username</label>
-                  <Input
-                    id="username"
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter your username"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="email" className="form-label">Email</label>
-                  <Input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter your email"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="password" className="form-label">
-                    New Password <span className="optional-text">(optional)</span>
-                  </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter new password"
-                    minLength="6"
-                  />
-                </div>
-                
-                {formData.password && (
+          {error && <div className="profile-error">{error}</div>}
+          {formError && <div className="profile-error">{formError}</div>}
+          {success && <div className="profile-success">{success}</div>}
+
+          <form onSubmit={handleSubmit} className="profile-form">
+            <div className="profile-info">
+              <div className="profile-header">
+                <h2 className="profile-name">{user.name}</h2>
+                <span className="profile-role">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
+              </div>
+
+              <ProfileImageUploader 
+                imagePreview={imagePreview} 
+                setImagePreview={setImagePreview} 
+                setFormData={setFormData}
+                onRemoveImage={handleImageRemove}
+                type={user.role}
+              />
+
+              {user.role === 'client' && (
+                <>
                   <div className="form-group">
-                    <label htmlFor="confirmPassword" className="form-label">Confirm New Password</label>
+                    <label htmlFor="companyName" className="form-label">Company/Business Name</label>
                     <Input
-                      id="confirmPassword"
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Confirm new password"
-                      minLength="6"
+                      id="companyName"
+                      name="companyName"
+                      value={formData.companyName}
+                      onChange={handleFormChange}
+                      placeholder="Enter your company or business name"
                     />
                   </div>
-                )}
-                
-                <div className="profile-form-actions">
-                  <Button
-                    type="submit"
-                    className="profile-button"
-                    disabled={loading}
-                  >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="profile-button"
-                    onClick={() => {
-                      setIsEditing(false);
-                      // Reset form to original values
-                      if (user) {
-                        setFormData({
-                          name: user.name || '',
-                          email: user.email || '',
-                          username: user.username || '',
-                          password: '',
-                          confirmPassword: '',
-                        });
-                      }
-                      setFormError('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
+
+                  <div className="form-group">
+                    <label htmlFor="title" className="form-label">Title/Position</label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleFormChange}
+                      placeholder="Your position or title"
+                    />
+                  </div>
+                </>
+              )}
+
+              {user.role === 'freelancer' && (
+                <div className="form-group">
+                  <label htmlFor="skills" className="form-label">Skills</label>
+                  <Input
+                    id="skills"
+                    name="skills"
+                    value={formData.skills}
+                    onChange={handleFormChange}
+                    placeholder="Your skills (separate with commas)"
+                  />
                 </div>
-              </form>
-            )}
-          </div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="bio" className="form-label">Bio</label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  className="textarea-input"
+                  value={formData.bio}
+                  onChange={handleFormChange}
+                  placeholder={user.role === 'client' ? "Tell us about your company or project needs" : "Tell clients about your experience and expertise"}
+                  rows="4"
+                />
+              </div>
+
+              <div className="profile-form-actions">
+                <Button type="submit" className="profile-button" disabled={loading || isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Save Profile'}
+                </Button>
+              </div>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

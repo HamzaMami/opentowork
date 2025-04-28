@@ -5,7 +5,6 @@ import Navbar from './components/layout/Navbar';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import AccountSettings from './components/auth/AccountSettings';
-import FreelancerProfile from './components/auth/FreelancerProfile';
 import Profile from './components/auth/Profile';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import './App.css';
@@ -49,12 +48,12 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            {/* Freelancer profile route that only freelancers can access */}
+            {/* Profile route that handles both client and freelancer profiles */}
             <Route 
               path="/profile" 
               element={
                 <ProtectedRoute>
-                  <FreelancerProfile />
+                  <Profile />
                 </ProtectedRoute>
               } 
             />

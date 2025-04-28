@@ -49,4 +49,98 @@ export const usersAPI = {
   delete: (id) => api.delete(`/users/${id}`),
 };
 
+// Client Profile API
+export const clientProfileAPI = {
+  get: () => api.get('/profile/client'),
+  create: (profileData) => {
+    const formData = new FormData();
+    
+    // Append all fields to formData
+    Object.entries(profileData).forEach(([key, value]) => {
+      // Handle file upload separately
+      if (key === 'profileImage' && value instanceof File) {
+        formData.append('profileImage', value);
+      } else {
+        formData.append(key, value);
+      }
+    });
+    
+    return api.post('/profile/client', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  update: async (data) => {
+    const formData = new FormData();
+    
+    // Add all form fields to formData
+    Object.keys(data).forEach(key => {
+      if (key === 'profileImage' && data[key]) {
+        formData.append('profileImage', data[key]);
+      } else if (key !== 'profileImage') {
+        formData.append(key, data[key]);
+      }
+    });
+
+    // Explicitly append removeImage flag if present
+    if (data.removeImage) {
+      formData.append('removeImage', 'true');
+    }
+
+    return api.put('/profile/client', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
+// Freelancer Profile API
+export const freelancerProfileAPI = {
+  get: () => api.get('/profile/freelancer'),
+  create: (profileData) => {
+    const formData = new FormData();
+    
+    // Append all fields to formData
+    Object.entries(profileData).forEach(([key, value]) => {
+      // Handle file upload separately
+      if (key === 'profileImage' && value instanceof File) {
+        formData.append('profileImage', value);
+      } else {
+        formData.append(key, value);
+      }
+    });
+    
+    return api.post('/profile/freelancer', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+  update: async (data) => {
+    const formData = new FormData();
+    
+    // Add all form fields to formData
+    Object.keys(data).forEach(key => {
+      if (key === 'profileImage' && data[key]) {
+        formData.append('profileImage', data[key]);
+      } else if (key !== 'profileImage') {
+        formData.append(key, data[key]);
+      }
+    });
+
+    // Explicitly append removeImage flag if present
+    if (data.removeImage) {
+      formData.append('removeImage', 'true');
+    }
+
+    return api.put('/profile/freelancer', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
 export default api;

@@ -89,6 +89,56 @@ router.put('/:id', protect, isOwnerOrAdmin, async (req, res) => {
   }
 });
 
+// Update user profile - Protected
+router.put('/update-profile', protect, async (req, res) => {
+  try {
+    const { firstName, lastName, email, removeImage } = req.body;
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update basic fields
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+
+    // Handle profile image
+    if (req.files && req.files.profileImage) {
+      // Delete old image if it exists
+      if (user.profileImage) {
+        const oldImagePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profileImage);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+
+      const file = req.files.profileImage;
+      const fileName = `user-${user._id}-${Date.now()}${path.extname(file.name)}`;
+      const uploadPath = path.join(__dirname, '..', 'uploads', 'profiles', fileName);
+      
+      await file.mv(uploadPath);
+      user.profileImage = fileName;
+    } else if (removeImage) {
+      // Remove existing image if removeImage flag is true
+      if (user.profileImage) {
+        const imagePath = path.join(__dirname, '..', 'uploads', 'profiles', user.profileImage);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+        user.profileImage = '';
+      }
+    }
+
+    await user.save();
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Delete a user - Admin only
 router.delete('/:id', protect, admin, async (req, res) => {
   try {
