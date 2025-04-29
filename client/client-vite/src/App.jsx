@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Home from './components/Home';
+import About from './components/About';
 import Navbar from './components/layout/Navbar';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -22,17 +23,7 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route 
-              path="/about" 
-              element={
-                <div className="container page-container">
-                  <div className="content-card">
-                    <h1 className="page-title">About Us</h1>
-                    <p className="page-text">Coming soon...</p>
-                  </div>
-                </div>
-              } 
-            />
+            <Route path="/about" element={<About />} />
             <Route 
               path="/jobs" 
               element={
