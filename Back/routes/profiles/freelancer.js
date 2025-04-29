@@ -163,8 +163,8 @@ router.delete('/', protect, freelancer, async (req, res) => {
       }
     }
     
-    // Delete profile
-    await freelancerProfile.remove();
+    // Delete profile - updated to use current Mongoose pattern
+    await freelancerProfile.deleteOne();
     
     res.json({ message: 'Freelancer profile deleted successfully' });
   } catch (error) {

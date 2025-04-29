@@ -27,7 +27,7 @@ const Profile = () => {
       setFormData({
         companyName: clientProfile.companyName || '',
         title: clientProfile.title || '',
-        skills: '',
+        skills: clientProfile.skills || '', // Preserve skills if they exist
         bio: clientProfile.bio || '',
         profileImage: null,
       });
@@ -39,8 +39,8 @@ const Profile = () => {
       setRemoveImage(false);
     } else if (user.role === 'freelancer' && freelancerProfile) {
       setFormData({
-        companyName: '',
-        title: '',
+        companyName: freelancerProfile.companyName || '', // Preserve companyName if it exists
+        title: freelancerProfile.title || '', // Preserve title if it exists
         skills: freelancerProfile.skills || '',
         bio: freelancerProfile.bio || '',
         profileImage: null,
@@ -96,7 +96,7 @@ const Profile = () => {
         dataToSend.append('profileImage', formData.profileImage);
       }
       
-      // Only append removeImage if it's true
+      // Directly set removeImage in the dataToSend object for API access
       if (removeImage) {
         dataToSend.append('removeImage', 'true');
       }
@@ -108,10 +108,18 @@ const Profile = () => {
       }
   
       setSuccess('Profile updated successfully!');
+      setRemoveImage(false); // Reset after successful update
       loadProfile(); // Refresh data
     } catch (error) {
-      console.error(error);
-      setFormError(error.response?.data?.message || 'Failed to update profile');
+      console.error('Profile update error:', error);
+      // More robust error handling
+      if (error.response && error.response.data) {
+        setFormError(error.response.data.message || error.response.data || 'Server error');
+      } else if (error.message) {
+        setFormError(error.message);
+      } else {
+        setFormError('Failed to update profile. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

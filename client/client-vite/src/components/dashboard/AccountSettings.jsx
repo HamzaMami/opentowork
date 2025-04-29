@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import './Auth.css';
 
 const AccountSettings = () => {
   const { user, updateProfile, loading, error } = useAuth();
@@ -77,21 +76,22 @@ const AccountSettings = () => {
   };
 
   if (!user) {
-    return <div className="auth-container">Loading account settings...</div>;
+    return <div className="dashboard-section">Loading account settings...</div>;
   }
   
   return (
-    <div className="auth-container">
-      <Card className="auth-card">
+    <div className="dashboard-section">
+      <h2 className="dashboard-section-title">Account Settings</h2>
+      <Card>
         <CardHeader>
-          <CardTitle className="auth-title">Account Settings</CardTitle>
+          <CardTitle>Account Settings</CardTitle>
           <CardDescription>Manage your personal information and password</CardDescription>
         </CardHeader>
         
         <CardContent>
-          {error && <div className="auth-error">{error}</div>}
-          {formError && <div className="auth-error">{formError}</div>}
-          {success && <div className="auth-success">{success}</div>}
+          {error && <div className="alert alert-error">{error}</div>}
+          {formError && <div className="alert alert-error">{formError}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
           
           <div className="profile-info">
             <div className="profile-header">
@@ -123,7 +123,7 @@ const AccountSettings = () => {
                 </div>
               </>
             ) : (
-              <form onSubmit={handleSubmit} className="auth-form">
+              <form onSubmit={handleSubmit} className="settings-form">
                 <div className="form-group">
                   <label htmlFor="name" className="form-label">Full Name</label>
                   <Input

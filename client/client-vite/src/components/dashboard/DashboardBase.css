@@ -1,0 +1,428 @@
+/* Dashboard Base Component Styles */
+
+/* Dashboard Layout Structure - Fixed scroll space at top */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-y: auto;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.dashboard-container {
+  display: flex;
+  height: calc(100vh - 70px); /* Subtract navbar height */
+  background-color: #f8fafc;
+  margin-top: 0; /* Remove margin and use absolute positioning instead */
+  position: absolute;
+  top: 70px; /* Position exactly below navbar */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: hidden; /* Prevent scroll on the container itself */
+}
+
+.dashboard-sidebar {
+  width: 280px;
+  background-color: #1e293b; /* Match navbar color */
+  border-right: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  position: fixed; /* Fixed position */
+  top: 70px; /* Position exactly at navbar bottom with no gap */
+  bottom: 0;
+  left: 0;
+  z-index: 9; /* Lower than navbar's z-index */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  margin-top: 0; /* Ensure no extra margin */
+  padding-top: 0; /* Ensure no extra padding */
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e2e8f0; /* Updated for better visibility on dark background */
+  margin: 0;
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  color: #cbd5e1; /* Updated for better visibility on dark background */
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar-link:hover {
+  background-color: #334155;
+  color: #38bdf8;
+}
+
+.sidebar-link.active {
+  background-color: #334155;
+  color: #38bdf8;
+  border-right: 3px solid #38bdf8;
+}
+
+.sidebar-icon {
+  margin-right: 0.75rem;
+  font-size: 1.25rem;
+  width: 1.5rem;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding: 1rem 0;
+  border-top: 1px solid #334155;
+}
+
+.dashboard-content {
+  flex: 1;
+  margin-left: 280px; /* Add margin equal to sidebar width */
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  padding-top: 0; /* Remove any extra padding */
+  margin-top: 0; /* Remove any extra margin */
+}
+
+.dashboard-topbar {
+  height: 64px;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  margin-top: 0; /* Remove top margin */
+  padding-top: 0; /* Remove top padding */
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  color: #64748b;
+  margin-right: 1rem;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: none;
+}
+
+.dashboard-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.dashboard-title h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+/* Dashboard Main - Fixed to remove empty spaces */
+.dashboard-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto; /* Restore scrolling for non-chat components */
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 134px); /* Set explicit height accounting for navbar and topbar */
+}
+
+/* Only apply overflow:hidden for chat component */
+.dashboard-main:has(.dashboard-chat) {
+  padding: 1rem;
+  height: calc(100vh - 134px);
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar-open {
+    transform: translateX(0);
+  }
+  
+  .sidebar-close-btn {
+    display: block;
+  }
+  
+  .menu-toggle {
+    display: block;
+  }
+}
+
+/* Common Elements */
+.dashboard-welcome {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
+
+.dashboard-subtitle {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
+
+.dashboard-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Stats Grid */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-stat-card {
+  background-color: #fff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-header-compact {
+  padding: 1rem 1.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+  color: #0284c7;
+}
+
+.stat-description {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* Dashboard Sections - Fixed to remove empty spaces */
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  margin-bottom: 0; /* Remove extra margin */
+}
+
+.dashboard-section {
+  margin-bottom: 1.5rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  height: fit-content; /* Ensure section takes only the space it needs */
+}
+
+/* Empty States */
+.dashboard-empty-state {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 9999px;
+  background-color: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-empty-state h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #334155;
+}
+
+.dashboard-empty-state p {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  max-width: 24rem;
+}
+
+.dashboard-action-button {
+  background-color: #0284c7;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.dashboard-action-button:hover {
+  background-color: #0369a1;
+}
+
+.dashboard-action-button i {
+  font-size: 0.875rem;
+}
+
+/* Skills Tags */
+.skills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+/* Profile Hover Card Styles */
+.profile-hover-card {
+  position: absolute;
+  width: 280px;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  z-index: 100;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.profile-hover-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.profile-hover-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 0.75rem;
+  background-color: #e0f2fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-hover-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0284c7;
+}
+
+.profile-hover-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.profile-hover-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-hover-item {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+}
+
+.profile-hover-label {
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+/* Responsive Adaptations for smaller screens */
+@media (max-width: 768px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .dashboard-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-section-title {
+    font-size: 1.25rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+}

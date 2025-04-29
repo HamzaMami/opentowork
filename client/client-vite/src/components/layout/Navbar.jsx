@@ -1,12 +1,21 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/button';
+import { useState, useRef, useEffect } from 'react';
 import './Navbar.css';
 
 function Navbar() {
   const { user, logout, clientProfile, freelancerProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const timeoutRef = useRef(null);
+  
+  // Reset dropdown state when user changes (e.g., on login)
+  useEffect(() => {
+    setShowDropdown(false);
+  }, [user]);
   
   const handleLogout = () => {
     logout();
@@ -26,6 +35,29 @@ function Navbar() {
   const isActive = (path) => {
     return location.pathname === path ? 'navbar-link-active' : '';
   };
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setShowDropdown(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setShowDropdown(false);
+    }, 300); // 300ms delay before closing dropdown
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <nav className="navbar">
@@ -61,28 +93,64 @@ function Navbar() {
             <div className="auth-buttons">
               {user ? (
                 <>
-                  <div className="navbar-user">
-                    <Link to="/account" className="navbar-profile-container">
-                      {getProfileImage() ? (
-                        <img 
-                          src={getProfileImage()} 
-                          alt={user.name} 
-                          className="navbar-profile-image"
-                        />
-                      ) : (
-                        <div className="navbar-profile-placeholder">
-                          {user.name.charAt(0).toUpperCase()}
+                  <div className="navbar-user-dropdown">
+                    <div 
+                      className="navbar-user"
+                      ref={dropdownRef}
+                      onMouseEnter={handleMouseEnter}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <div className="navbar-profile-container">
+                        {getProfileImage() ? (
+                          <img 
+                            src={getProfileImage()} 
+                            alt={user.name} 
+                            className="navbar-profile-image"
+                          />
+                        ) : (
+                          <div className="navbar-profile-placeholder">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="navbar-user-info">
+                          <span className="navbar-username">{user.name}</span>
+                          <span className="navbar-role">{user.role}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Dropdown menu */}
+                      {showDropdown && (
+                        <div 
+                          className="navbar-dropdown"
+                          onMouseEnter={handleMouseEnter}
+                          onMouseLeave={handleMouseLeave}
+                          style={{ left: '0px' }} // Position it directly below the user section
+                        >
+                          <Link to={`/dashboard/${user.role}`} className="dropdown-item">
+                            <i className="dropdown-icon fas fa-tachometer-alt"></i>
+                            Dashboard
+                          </Link>
+                          <Link to={`/dashboard/${user.role}/wallet`} className="dropdown-item">
+                            <i className="dropdown-icon fas fa-wallet"></i>
+                            Wallet
+                          </Link>
+                          <Link to={`/dashboard/${user.role}/chat`} className="dropdown-item">
+                            <i className="dropdown-icon fas fa-comments"></i>
+                            Messages
+                          </Link>
+                          <Link to={`/dashboard/${user.role}/settings`} className="dropdown-item">
+                            <i className="dropdown-icon fas fa-cog"></i>
+                            Account Settings
+                          </Link>
+                          <div className="dropdown-divider"></div>
+                          <button onClick={handleLogout} className="dropdown-item dropdown-item-danger">
+                            <i className="dropdown-icon fas fa-sign-out-alt"></i>
+                            Logout
+                          </button>
                         </div>
                       )}
-                      <div className="navbar-user-info">
-                        <span className="navbar-username">{user.name}</span>
-                        <span className="navbar-role">{user.role}</span>
-                      </div>
-                    </Link>
+                    </div>
                   </div>
-                  <Button onClick={handleLogout} variant="outline" className="logout-button">
-                    Logout
-                  </Button>
                 </>
               ) : (
                 <>

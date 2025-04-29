@@ -42,7 +42,7 @@ export const authAPI = {
 
 // Users API
 export const usersAPI = {
-  getAll: () => api.get('/users'),
+  getAll: (params = {}) => api.get('/users', { params }),
   getById: (id) => api.get(`/users/${id}`),
   create: (userData) => api.post('/users', userData),
   update: (id, userData) => api.put(`/users/${id}`, userData),
@@ -55,43 +55,46 @@ export const clientProfileAPI = {
   create: (profileData) => {
     const formData = new FormData();
     
-    // Append all fields to formData
+    // If profileData is already FormData, use it directly
+    if (profileData instanceof FormData) {
+      return api.post('/profile/client', profileData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    
+    // Otherwise, convert object to FormData
     Object.entries(profileData).forEach(([key, value]) => {
-      // Handle file upload separately
       if (key === 'profileImage' && value instanceof File) {
         formData.append('profileImage', value);
-      } else {
+      } else if (value !== null && value !== undefined) {
         formData.append(key, value);
       }
     });
     
     return api.post('/profile/client', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  update: async (data) => {
-    const formData = new FormData();
+  update: (profileData) => {
+    // If profileData is already FormData, use it directly
+    if (profileData instanceof FormData) {
+      return api.put('/profile/client', profileData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
     
-    // Add all form fields to formData
-    Object.keys(data).forEach(key => {
-      if (key === 'profileImage' && data[key]) {
-        formData.append('profileImage', data[key]);
-      } else if (key !== 'profileImage') {
-        formData.append(key, data[key]);
+    // Otherwise, convert object to FormData
+    const formData = new FormData();
+    Object.entries(profileData).forEach(([key, value]) => {
+      if (key === 'profileImage' && value instanceof File) {
+        formData.append('profileImage', value);
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value);
       }
     });
-
-    // Explicitly append removeImage flag if present
-    if (data.removeImage) {
-      formData.append('removeImage', 'true');
-    }
-
+    
     return api.put('/profile/client', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
 };
@@ -100,47 +103,92 @@ export const clientProfileAPI = {
 export const freelancerProfileAPI = {
   get: () => api.get('/profile/freelancer'),
   create: (profileData) => {
-    const formData = new FormData();
+    // If profileData is already FormData, use it directly
+    if (profileData instanceof FormData) {
+      return api.post('/profile/freelancer', profileData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
     
-    // Append all fields to formData
+    // Otherwise, convert object to FormData
+    const formData = new FormData();
     Object.entries(profileData).forEach(([key, value]) => {
-      // Handle file upload separately
       if (key === 'profileImage' && value instanceof File) {
         formData.append('profileImage', value);
-      } else {
+      } else if (value !== null && value !== undefined) {
         formData.append(key, value);
       }
     });
     
     return api.post('/profile/freelancer', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  update: async (data) => {
-    const formData = new FormData();
-    
-    // Add all form fields to formData
-    Object.keys(data).forEach(key => {
-      if (key === 'profileImage' && data[key]) {
-        formData.append('profileImage', data[key]);
-      } else if (key !== 'profileImage') {
-        formData.append(key, data[key]);
-      }
-    });
-
-    // Explicitly append removeImage flag if present
-    if (data.removeImage) {
-      formData.append('removeImage', 'true');
+  update: (profileData) => {
+    // If profileData is already FormData, use it directly
+    if (profileData instanceof FormData) {
+      return api.put('/profile/freelancer', profileData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
     }
-
+    
+    // Otherwise, convert object to FormData
+    const formData = new FormData();
+    Object.entries(profileData).forEach(([key, value]) => {
+      if (key === 'profileImage' && value instanceof File) {
+        formData.append('profileImage', value);
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
+    });
+    
     return api.put('/profile/freelancer', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+};
+
+// Wallet API
+export const walletAPI = {
+  getWallet: () => api.get('/wallet'),
+  getTransactions: () => api.get('/wallet/transactions'),
+  addFunds: (amount, paymentMethod) => api.post('/wallet/deposit', { amount, paymentMethod }),
+  withdrawFunds: (amount, withdrawalMethod) => api.post('/wallet/withdraw', { amount, withdrawalMethod }),
+  
+  // Payment methods
+  getPaymentMethods: () => api.get('/wallet/payment-methods'),
+  addPaymentMethod: (type, details, makeDefault = false) => 
+    api.post('/wallet/payment-methods', { type, details, makeDefault }),
+  removePaymentMethod: (id) => api.delete(`/wallet/payment-methods/${id}`)
+};
+
+// Chat API
+export const chatAPI = {
+  getAllChats: () => api.get('/chats'),
+  createChat: (recipientId) => api.post('/chats', { recipientId }),
+  getChatById: (chatId) => api.get(`/chats/${chatId}`),
+  getChatMessages: (chatId, page = 1, limit = 20) => api.get(`/chats/${chatId}/messages`, {
+    params: { page, limit }
+  }),
+  
+  // Send a message with optional attachments
+  sendMessage: (formData) => {
+    // Extract chatId from formData
+    const chatId = formData.get('chatId');
+   
+    // FormData already contains content and attachments if any
+    return api.post(`/chats/${chatId}/messages`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  
+  // Mark all unread messages in a chat as read
+  markMessagesAsRead: (chatId) => api.put(`/chats/${chatId}/read`),
+  
+  // Delete a specific message
+  deleteMessage: (chatId, messageId) => api.delete(`/chats/${chatId}/messages/${messageId}`),
+  
+  getUnreadCount: () => api.get('/chats/unread/count')
 };
 
 export default api;

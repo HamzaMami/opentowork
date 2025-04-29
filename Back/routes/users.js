@@ -1,27 +1,114 @@
 import express from 'express';
 import User from '../models/User.js';
+import FreelancerProfile from '../models/Freelancer_profile.js';
+import ClientProfile from '../models/Client_profile.js';
 import { protect, admin, isOwnerOrAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all users - Protected, Admin only
-router.get('/', protect, admin, async (req, res) => {
+// Get all users - Protected, with search and filter capabilities
+router.get('/', protect, async (req, res) => {
   try {
-    const users = await User.find({}).select('-password');
-    res.json(users);
+    const { search, role } = req.query;
+    let query = {};
+    
+    // Add search functionality
+    if (search) {
+      // Search by name, username, or email
+      query = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { username: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+    
+    // Filter by role if provided
+    if (role) {
+      query.role = role;
+    }
+    
+    // Exclude the current user from results
+    query._id = { $ne: req.user._id };
+    
+    // Get users with pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    const users = await User.find(query)
+      .select('-password')
+      .skip(skip)
+      .limit(limit)
+      .sort({ name: 1 });
+      
+    const total = await User.countDocuments(query);
+    
+    res.json({
+      users,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get user by ID - Protected, Admin or Owner only
-router.get('/:id', protect, isOwnerOrAdmin, async (req, res) => {
+// Get user by ID - Protected, but allows access for chat interactions
+router.get('/:id', protect, async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+    
+    // Check if the requesting user is the owner or admin
+    const isOwner = req.user._id.toString() === req.params.id;
+    const isAdmin = req.user.role === 'admin';
+    
+    // In a chat context, we'll consider email as public information
+    // for better user experience in the chat interface
+    const response = {
+      _id: user._id,
+      name: user.name,
+      role: user.role,
+      email: user.email // Include email for chat participants
+    };
+    
+    // Fetch profile data based on user's role
+    let profileData = null;
+    if (user.role === 'freelancer') {
+      profileData = await FreelancerProfile.findOne({ user: req.params.id });
+    } else if (user.role === 'client') {
+      profileData = await ClientProfile.findOne({ user: req.params.id });
+    }
+    
+    // Add profile image and basic public info regardless of relationship
+    if (profileData) {
+      response.profileImage = profileData.profileImage;
+      
+      // Only add more sensitive details for owner or admin
+      if (isOwner || isAdmin) {
+        response.bio = profileData.bio;
+        if (user.role === 'freelancer') {
+          response.skills = profileData.skills;
+        }
+      } else {
+        // For non-owners/admins, include just a preview of the bio if it exists
+        if (profileData.bio) {
+          const bioPreview = profileData.bio.length > 100 
+            ? profileData.bio.substring(0, 100) + '...' 
+            : profileData.bio;
+          response.bio = bioPreview;
+        }
+      }
+    }
+    
+    res.json(response);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

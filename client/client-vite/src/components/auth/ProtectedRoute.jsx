@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 /**
  * A wrapper component for routes that require authentication
  * If user is not authenticated, redirects to login page
+ * Supports both direct children and render function patterns
  */
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -18,7 +19,12 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
   
-  // Render children if authenticated
+  // If children is a function, call it with the auth context
+  if (typeof children === 'function') {
+    return children({ user, loading });
+  }
+  
+  // Otherwise render children directly
   return children;
 };
 

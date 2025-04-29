@@ -1,0 +1,222 @@
+/* Wallet Component Styles */
+
+/* Core Variables */
+:root {
+  --wallet-primary-color: #0284c7;
+  --wallet-primary-hover: #0369a1;
+  --wallet-bg-color: #fff;
+  --wallet-border-color: #e2e8f0;
+  --wallet-text-primary: #334155;
+  --wallet-text-secondary: #64748b;
+  --wallet-text-muted: #94a3b8;
+  --wallet-success: #10b981;
+  --wallet-warning: #f59e0b;
+  --wallet-danger: #ef4444;
+  --wallet-border-radius: 0.5rem;
+}
+
+/* Wallet Layout */
+.dashboard-wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.wallet-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.balance-card {
+  background-color: var(--wallet-bg-color);
+  border-radius: var(--wallet-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--wallet-border-color);
+  padding: 1.5rem;
+}
+
+.balance-amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--wallet-primary-color);
+  margin: 0.5rem 0 1rem;
+}
+
+.balance-amount.pending {
+  color: var(--wallet-warning);
+}
+
+.balance-note {
+  color: var(--wallet-text-secondary);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Tabs Interface */
+.wallet-tabs {
+  border: 1px solid var(--wallet-border-color);
+  border-radius: var(--wallet-border-radius);
+  overflow: hidden;
+  background-color: var(--wallet-bg-color);
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 1px solid var(--wallet-border-color);
+  background-color: #f8fafc;
+}
+
+.tab-button {
+  padding: 1rem 1.5rem;
+  color: var(--wallet-text-secondary);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button.active {
+  color: var(--wallet-primary-color);
+  border-bottom: 2px solid var(--wallet-primary-color);
+  background-color: var(--wallet-bg-color);
+}
+
+.tab-button:hover:not(.active) {
+  color: var(--wallet-text-primary);
+  background-color: #f1f5f9;
+}
+
+.tabs-content {
+  padding: 1rem;
+}
+
+/* Transaction Table */
+.transactions-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.transactions-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions-table th,
+.transactions-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--wallet-border-color);
+}
+
+.transactions-table th {
+  font-weight: 600;
+  color: var(--wallet-text-primary);
+  background-color: #f8fafc;
+}
+
+/* Transaction Indicators and Labels */
+.text-green {
+  color: var(--wallet-success);
+}
+
+.text-red {
+  color: var(--wallet-danger);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.completed {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.failed {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Wallet Actions */
+.wallet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.wallet-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--wallet-bg-color);
+  color: var(--wallet-text-primary);
+  border: 1px solid var(--wallet-border-color);
+  border-radius: var(--wallet-border-radius);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.wallet-action-button:hover {
+  background-color: #f8fafc;
+  border-color: var(--wallet-text-secondary);
+}
+
+.wallet-action-button.primary {
+  background-color: var(--wallet-primary-color);
+  color: white;
+  border-color: transparent;
+}
+
+.wallet-action-button.primary:hover {
+  background-color: var(--wallet-primary-hover);
+}
+
+/* Responsive Adaptations */
+@media (max-width: 768px) {
+  .wallet-overview {
+    grid-template-columns: 1fr;
+  }
+  
+  .tabs-header {
+    overflow-x: auto;
+  }
+  
+  .tab-button {
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+  }
+  
+  .transactions-table {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .balance-amount {
+    font-size: 2rem;
+  }
+  
+  .tabs-content {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .wallet-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -165,8 +165,8 @@ router.delete('/', protect, client, async (req, res) => {
       }
     }
     
-    // Delete profile
-    await clientProfile.remove();
+    // Delete profile - updated to use current Mongoose pattern
+    await clientProfile.deleteOne();
     
     res.json({ message: 'Client profile deleted successfully' });
   } catch (error) {

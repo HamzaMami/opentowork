@@ -1,0 +1,628 @@
+/* Chat Messages and Attachments Styles */
+
+/* Chat Variables */
+:root {
+  --chat-border-color: #e2e8f0;
+  --chat-bg-color: #fff;
+  --chat-hover-bg: #f8fafc;
+  --chat-active-bg: #e0f2fe;
+  --chat-text-primary: #334155;
+  --chat-text-secondary: #64748b;
+  --chat-text-muted: #94a3b8;
+  --chat-primary-color: #0284c7;
+  --chat-primary-hover: #0369a1;
+  --chat-message-sent-bg: var(--chat-primary-color);
+  --chat-message-received-bg: #f1f5f9;
+  --chat-border-radius: 0.5rem;
+}
+
+/* Date Divider - Fixed to prevent overlapping */
+.chat-date-divider {
+  text-align: center;
+  padding: 8px 0;
+  position: relative;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clear: both; /* Prevent overlapping with floating messages */
+  width: 100%; /* Ensure it spans full width */
+}
+
+.chat-date-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background-color: var(--chat-border-color);
+  z-index: 0;
+}
+
+.chat-date-divider span {
+  position: relative;
+  z-index: 1;
+  background-color: #f8fafc; /* Match the chat background */
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  color: var(--chat-text-secondary);
+  border: 1px solid var(--chat-border-color);
+}
+
+/* Message Group - Fixed to properly contain messages */
+.message-group {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+  overflow: hidden; /* Contains floating messages */
+  position: relative;
+}
+
+.message-group:after {
+  content: "";
+  display: table;
+  clear: both;
+  margin-bottom: 8px; /* Add space after clearing */
+}
+
+/* Message Group Content - Container for messages within a group */
+.message-group-content {
+  display: block;
+  width: 100%;
+  overflow: hidden; /* Contains floating messages */
+}
+
+/* Ensure each message has proper spacing and doesn't overlap with date separator */
+.message-group-content .chat-message:first-child {
+  margin-top: 8px;
+}
+
+/* Add extra space after the last message in a group */
+.message-group-content .chat-message:last-child {
+  margin-bottom: 16px;
+}
+
+/* Chat Messages Container - Improved for better zooming behavior */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto !important; /* Force scrolling */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+  position: relative;
+  height: auto;
+  min-height: 0 !important; /* Allow container to shrink */
+  max-height: none !important;
+  scroll-behavior: smooth; /* Smooth scrolling */
+  padding-bottom: 16px;
+  width: 100%;
+  contain: content; /* Improve performance and layout behavior */
+}
+
+/* Chat Message List - Better structure for zoom handling */
+.chat-message-list {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  width: 100%;
+  min-height: 100%;
+  position: relative; /* Required for proper positioning at different zoom levels */
+  flex: 1 0 auto; /* Ensure it grows but doesn't shrink unnecessarily */
+  overflow: visible; /* Let content overflow properly so zooming works */
+}
+
+/* Individual Messages - Fixed layout */
+.chat-message {
+  max-width: 80%;
+  min-width: 30px; /* Ensure messages have at least some width */
+  margin-bottom: 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  clear: both;
+  animation: fadeIn 0.15s ease-out;
+  transform-origin: center left;
+  will-change: transform, opacity; /* Performance optimization */
+}
+
+/* Message animations - performance optimized */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sent messages - aligned to the right */
+.chat-message.sent {
+  float: right;
+  align-items: flex-end;
+  margin-left: auto;
+  margin-right: 0;
+  transform-origin: center right;
+}
+
+/* Received messages - aligned to the left */
+.chat-message.received {
+  float: left;
+  align-items: flex-start;
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.chat-message-sender {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+  color: var(--chat-text-secondary);
+}
+
+/* Message content styling for better zoom handling */
+.chat-message-content {
+  padding: 12px 16px;
+  border-radius: 18px;
+  word-break: break-word;
+  box-shadow: var(--chat-shadow-sm);
+  position: relative;
+  min-width: 0; /* Allow text to wrap */
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.chat-message.sent .chat-message-content {
+  background-color: var(--chat-message-sent-bg);
+  color: white;
+  border-top-right-radius: 4px;
+}
+
+.chat-message.received .chat-message-content {
+  background-color: var(--chat-message-received-bg);
+  color: var(--chat-text-primary);
+  border-top-left-radius: 4px;
+  border: 1px solid var(--chat-border-color);
+}
+
+.chat-message-content p {
+  margin: 0;
+}
+
+.chat-message-time {
+  font-size: 0.75rem;
+  color: var(--chat-text-muted);
+  margin-top: 4px;
+}
+
+/* Chat Attachments */
+.chat-attachment {
+  margin-top: 0.5rem;
+  max-width: 250px;
+  border-radius: var(--chat-border-radius);
+  overflow: hidden;
+  border: 1px solid var(--chat-border-color);
+  box-shadow: var(--chat-shadow-sm);
+}
+
+.chat-attachment img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.chat-attachment-download {
+  display: block;
+  padding: 0.5rem;
+  text-align: center;
+  background-color: var(--chat-hover-bg);
+  color: var(--chat-primary-color);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: var(--chat-transition);
+}
+
+.chat-attachment-download:hover {
+  background-color: var(--chat-active-bg);
+}
+
+/* Attachment Preview */
+.attachment-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.attachment-item {
+  position: relative;
+  max-width: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--chat-border-color);
+  box-shadow: var(--chat-shadow-sm);
+}
+
+.attachment-image {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.attachment-image:hover {
+  transform: scale(1.03);
+}
+
+.attachment-file {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--chat-hover-bg);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--chat-primary-color);
+  transition: var(--chat-transition);
+  gap: 8px;
+}
+
+.attachment-file:hover {
+  background-color: #e2e8f0;
+}
+
+.attachment-file span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  font-size: 0.875rem;
+}
+
+.attachment-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  transition: var(--chat-transition);
+  backdrop-filter: blur(2px);
+}
+
+.attachment-remove:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1);
+}
+
+/* Attachment Modal */
+.attachment-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: modalFadeIn 0.2s ease;
+  backdrop-filter: blur(3px);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.attachment-modal-content {
+  max-width: 90%;
+  max-height: 90vh;
+  position: relative;
+  animation: modalContentIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalContentIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.attachment-modal-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.attachment-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: var(--chat-transition);
+}
+
+.attachment-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: rotate(90deg);
+}
+
+.attachment-modal-actions {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.attachment-modal-action {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--chat-transition);
+}
+
+.attachment-modal-action:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--chat-text-secondary);
+  margin-bottom: 8px;
+}
+
+.typing-indicator-dots {
+  display: flex;
+  margin-left: 0.5rem;
+}
+
+.typing-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--chat-text-secondary);
+  margin: 0 2px;
+  animation: typingAnimation 1.4s infinite ease-in-out;
+}
+
+.typing-indicator-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-indicator-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingAnimation {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* Unread messages marker */
+.unread-messages-marker {
+  background-color: #f0f9ff;
+  border-left: 3px solid var(--chat-primary-color);
+  color: var(--chat-primary-color);
+  padding: 8px 16px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: var(--chat-shadow-sm);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.unread-messages-marker::before {
+  content: "🔔";
+  margin-right: 8px;
+}
+
+/* Loading spinner for infinite scroll */
+.loading-messages {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  color: var(--chat-text-secondary);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--chat-primary-color);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Adaptations */
+@media (max-width: 768px), screen and (min-resolution: 1.25dppx) {
+  .chat-message {
+    max-width: 85%;
+  }
+
+  .chat-attachment {
+    max-width: 200px;
+  }
+  
+  .attachment-item {
+    max-width: 120px;
+  }
+  
+  .chat-message-list {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px), screen and (min-resolution: 1.5dppx) {
+  .chat-message {
+    max-width: 90%;
+  }
+  
+  .chat-message-content {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
+  
+  .attachment-item {
+    max-width: 100px;
+  }
+  
+  .attachment-image {
+    max-height: 120px;
+  }
+  
+  .chat-message-list {
+    padding: 8px;
+    gap: 0.5rem;
+  }
+}
+
+/* For extreme zoom levels or very small screens */
+@media (max-width: 380px), screen and (min-resolution: 2dppx) {
+  .chat-message {
+    max-width: 95%;
+    margin-bottom: 6px;
+  }
+  
+  .chat-message-content {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .chat-message-list {
+    padding: 6px;
+    gap: 0.4rem;
+  }
+}
+
+/* Chat container overflow fixes */
+.chat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Force the absolute minimum height for chat messages to ensure they're scrollable */
+@media (max-height: 400px) {
+  .chat-messages {
+    min-height: 200px;
+  }
+}
+
+/* Message end marker - important for scrolling */
+.message-end-marker {
+  visibility: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* Message footer with timestamp and actions */
+.chat-message-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.chat-message.received .chat-message-footer {
+  justify-content: flex-start;
+}
+
+.chat-message-time {
+  font-size: 0.75rem;
+  color: var(--chat-text-muted);
+}
+
+/* Message delete button */
+.message-delete-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  color: var(--chat-text-muted);
+  padding: 0;
+  opacity: 0.8;
+}
+
+.message-delete-btn:hover {
+  background-color: #f87171;
+  color: #ffffff;
+  opacity: 1;
+}
+
+.chat-message.received .message-delete-btn {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.chat-message.received .message-delete-btn:hover {
+  background-color: #f87171;
+  color: #ffffff;
+}
+
+/* Remove the old message options styling */
+.message-options {
+  display: none;
+}
