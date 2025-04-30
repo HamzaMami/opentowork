@@ -253,6 +253,8 @@
   border-radius: 15px;
   padding: 50px;
   text-align: center;
+  margin-bottom: 40px; /* Increased bottom margin */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05); /* Add subtle shadow */
 }
 
 .join-container {
@@ -265,38 +267,51 @@
   display: flex;
   justify-content: center;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .join-button, .contact-button {
-  display: inline-block;
+  display: inline-flex; /* Changed to inline-flex for better centering */
+  justify-content: center;
+  align-items: center;
   padding: 14px 30px;
-  border-radius: 30px;
+  border-radius: 6px; /* Changed to square corners for modern look */
   text-decoration: none;
   font-weight: 600;
   font-size: 1.1rem;
   transition: all 0.3s ease;
+  text-align: center;
+  width: 200px; /* Exact same fixed width for both buttons */
+  height: 52px; /* Fixed height for consistency */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+  cursor: pointer;
 }
 
 .join-button {
   background-color: #3498db;
-  color: white;
+  color: white !important; /* Ensure text is white with !important */
+  border: 2px solid #3498db;
 }
 
 .contact-button {
-  background-color: transparent;
-  color: #3498db;
+  background-color: white; /* Changed from transparent to white */
+  color: #3498db !important; /* Ensure text color with !important */
   border: 2px solid #3498db;
+  min-width: 180px;
+  height: 52px;
 }
 
 .join-button:hover {
   background-color: #2980b9;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(52, 152, 219, 0.2);
+  border-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(52, 152, 219, 0.2);
 }
 
 .contact-button:hover {
-  background-color: #f0f8ff;
-  transform: translateY(-3px);
+  background-color: rgba(52, 152, 219, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(52, 152, 219, 0.1);
 }
 
 /* Responsive adjustments */
@@ -327,9 +342,19 @@
   .join-buttons {
     flex-direction: column;
     gap: 15px;
+    align-items: center; /* Center the buttons */
+    max-width: 280px; /* Increased width for mobile */
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .join-button, .contact-button {
+    width: 100%; /* Make buttons fill the container width */
+    padding: 12px 20px; /* Slightly smaller padding on mobile */
   }
   
   .about-join {
     padding: 30px 20px;
+    margin-bottom: 40px; /* Extra space at the bottom on mobile */
   }
 }

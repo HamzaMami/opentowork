@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../ui/card';
 import { Input } from '../ui/input';
@@ -7,9 +7,10 @@ import { Button } from '../ui/button';
 import './Auth.css';
 
 const Register = () => {
-  const { register, loading, error } = useAuth();
+  const { register, loading, error, user } = useAuth();
   const navigate = useNavigate();
   
+  // Initialize state before any conditional returns
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,6 +20,11 @@ const Register = () => {
   });
   
   const [formError, setFormError] = useState('');
+  
+  // If user is already logged in, redirect to dashboard
+  if (user) {
+    return <Navigate to={`/dashboard/${user.role}`} replace />;
+  }
   
   const handleChange = (e) => {
     setFormData({
@@ -46,7 +52,7 @@ const Register = () => {
     
     try {
       // Remove confirmPassword before sending to API
-      const { confirmPassword, ...userData } = formData;
+      const { confirmPassword: _, ...userData } = formData;
       await register(userData);
       navigate('/profile');
     } catch (error) {

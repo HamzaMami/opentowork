@@ -1,7 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './About.css';
 
 const About = () => {
+  // Use auth context to check if user is logged in
+  const { user } = useAuth();
+  
   return (
     <div className="about-container">
       <div className="about-header">
@@ -151,8 +156,12 @@ const About = () => {
             Open to Work is the platform for you.
           </p>
           <div className="join-buttons">
-            <a href="/register" className="join-button">Sign Up Now</a>
-            <a href="/contact" className="contact-button">Contact Us</a>
+            {user ? (
+              <Link to={`/dashboard/${user.role}`} className="join-button">Go to Dashboard</Link>
+            ) : (
+              <Link to="/register" className="join-button">Sign Up Now</Link>
+            )}
+            <Link to="/contact" className="contact-button">Contact Us</Link>
           </div>
         </div>
       </section>

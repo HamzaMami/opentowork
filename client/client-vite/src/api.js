@@ -191,4 +191,51 @@ export const chatAPI = {
   getUnreadCount: () => api.get('/chats/unread/count')
 };
 
+// Contact API
+export const contactAPI = {
+  submitContactForm: (formData) => api.post('/contact', formData),
+  getContactSubmissions: () => api.get('/contact'), // For admin use
+  getContactSubmission: (id) => api.get(`/contact/${id}`), // For admin use
+  updateContactStatus: (id, status) => api.put(`/contact/${id}/status`, { status }) // For admin use
+};
+
+// Jobs API
+export const jobsAPI = {
+  // Get all jobs with optional filters
+  getJobs: (params = {}) => api.get('/jobs', { params }),
+  
+  // Get job by ID
+  getJobById: (id) => api.get(`/jobs/${id}`),
+  
+  // Create a new job posting (client only)
+  createJob: (jobData) => api.post('/jobs', jobData),
+  
+  // Update an existing job
+  updateJob: (id, jobData) => api.put(`/jobs/${id}`, jobData),
+  
+  // Delete a job
+  deleteJob: (id) => api.delete(`/jobs/${id}`),
+  
+  // Get all jobs posted by the authenticated client
+  getClientJobs: () => api.get('/jobs/client/me'),
+  
+  // Get all proposals for the authenticated client's jobs
+  getClientProposals: (params = {}) => api.get('/jobs/client/proposals', { params }),
+  
+  // Get all jobs assigned to the authenticated freelancer
+  getFreelancerJobs: () => api.get('/jobs/freelancer/me'),
+  
+  // Get all proposals submitted by the authenticated freelancer
+  getFreelancerProposals: (params = {}) => api.get('/jobs/proposals/me', { params }),
+  
+  // Submit a proposal for a job (freelancer only)
+  submitProposal: (jobId, proposalData) => api.post(`/jobs/${jobId}/proposals`, proposalData),
+  
+  // Accept a proposal (client only)
+  acceptProposal: (jobId, proposalId) => api.put(`/jobs/${jobId}/proposals/${proposalId}/accept`),
+  
+  // Withdraw a proposal (freelancer only)
+  withdrawProposal: (jobId, proposalId) => api.delete(`/jobs/${jobId}/proposals/${proposalId}`)
+};
+
 export default api;

@@ -96,6 +96,31 @@
   background-color: rgba(56, 189, 248, 0.1);
 }
 
+.navbar-link-jobs {
+  background-color: rgba(37, 99, 235, 0.1);
+  font-weight: 600;
+  color: #2563eb;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
+.navbar-link-jobs:hover {
+  background-color: rgba(37, 99, 235, 0.15);
+}
+
+.navbar-icon {
+  margin-right: 4px;
+}
+
+.navbar-link-active.navbar-link-jobs {
+  background-color: #2563eb;
+  color: white;
+}
+
+.navbar-link-active.navbar-link-jobs:hover {
+  background-color: #1d4ed8;
+}
+
 .auth-buttons {
   display: flex;
   align-items: center;

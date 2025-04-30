@@ -1,0 +1,325 @@
+.active-projects-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.active-projects-container h2 {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.section-description {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+/* Filter Controls */
+.filter-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background-color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.filter-button:hover {
+  background-color: #f5f5f5;
+}
+
+.filter-button.active {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.projects-count {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.project-header h3 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: #444;
+}
+
+/* Status badges */
+.project-status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.status-in-progress {
+  background-color: #4caf50;
+}
+
+.status-active {
+  background-color: #2196f3;
+}
+
+.status-ongoing {
+  background-color: #ff9800;
+}
+
+.project-details {
+  margin-bottom: 20px;
+}
+
+.project-detail {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.project-detail i {
+  margin-right: 10px;
+  color: #666;
+  width: 20px;
+  text-align: center;
+}
+
+/* Progress Bar */
+.project-progress {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progress-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.progress-header span {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #2563eb;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.freelancer-info-section,
+.client-info-section {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+.freelancer-info-section h4,
+.client-info-section h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: #555;
+}
+
+.project-freelancer,
+.project-client {
+  display: flex;
+  align-items: center;
+}
+
+.freelancer-avatar,
+.client-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #e1e1e1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.freelancer-avatar img,
+.client-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.freelancer-avatar i,
+.client-avatar i {
+  font-size: 18px;
+  color: #777;
+}
+
+.project-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.message-btn {
+  background-color: #2196f3;
+}
+
+.message-btn:hover {
+  background-color: #0d8bf2;
+}
+
+.view-details-btn {
+  background-color: #673ab7;
+}
+
+.view-details-btn:hover {
+  background-color: #5e35b1;
+}
+
+.complete-btn {
+  background-color: #4caf50;
+}
+
+.complete-btn:hover {
+  background-color: #43a047;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 50px auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  text-align: center;
+  color: #f44336;
+  padding: 20px;
+}
+
+.error-message i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.empty-projects-card {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  color: #ccc;
+  margin-bottom: 15px;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: #777;
+  margin-bottom: 20px;
+  max-width: 400px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .filter-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .project-actions {
+    flex-direction: column;
+  }
+  
+  .project-actions button {
+    width: 100%;
+  }
+}
+
+.freelancer-note {
+  color: #777;
+  font-style: italic;
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 4px;
+}

@@ -74,17 +74,22 @@ function Navbar() {
               <Link to="/" className={`navbar-link ${isActive('/')}`}>
                 Home
               </Link>
+              <Link to="/jobs" className={`navbar-link navbar-link-jobs ${isActive('/jobs')}`}>
+                <i className="fas fa-briefcase navbar-icon"></i> Jobs
+              </Link>
+              {user && user.role === 'client' && (
+                <Link to="/dashboard/client/hire" className={`navbar-link ${isActive('/dashboard/client/hire')}`}>
+                  <i className="fas fa-plus-circle navbar-icon"></i> Post a Job
+                </Link>
+              )}
+              {user && user.role === 'freelancer' && (
+                <Link to="/dashboard/freelancer/jobs" className={`navbar-link ${isActive('/dashboard/freelancer/jobs')}`}>
+                  <i className="fas fa-search navbar-icon"></i> Find Work
+                </Link>
+              )}
               <Link to="/about" className={`navbar-link ${isActive('/about')}`}>
                 About
               </Link>
-              <Link to="/jobs" className={`navbar-link ${isActive('/jobs')}`}>
-                Jobs
-              </Link>
-              {user && (
-                <Link to="/profile" className={`navbar-link ${isActive('/profile')}`}>
-                  My Profile
-                </Link>
-              )}
               <Link to="/contact" className={`navbar-link ${isActive('/contact')}`}>
                 Contact
               </Link>
@@ -130,6 +135,22 @@ function Navbar() {
                             <i className="dropdown-icon fas fa-tachometer-alt"></i>
                             Dashboard
                           </Link>
+                          <Link to="/profile" className="dropdown-item">
+                            <i className="dropdown-icon fas fa-user"></i>
+                            Profile
+                          </Link>
+                          {user.role === 'client' && (
+                            <Link to={`/dashboard/${user.role}/hire`} className="dropdown-item">
+                              <i className="dropdown-icon fas fa-plus-circle"></i>
+                              Post a Job
+                            </Link>
+                          )}
+                          {user.role === 'freelancer' && (
+                            <Link to={`/dashboard/${user.role}/jobs`} className="dropdown-item">
+                              <i className="dropdown-icon fas fa-briefcase"></i>
+                              Find Work
+                            </Link>
+                          )}
                           <Link to={`/dashboard/${user.role}/wallet`} className="dropdown-item">
                             <i className="dropdown-icon fas fa-wallet"></i>
                             Wallet

@@ -63,25 +63,49 @@ const Dashboard = () => {
           {role === 'client' && (
             <>
               <NavLink 
-                to={`/dashboard/${role}/projects`} 
+                to={`/dashboard/${role}/active-projects`} 
                 className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
               >
-                <i className="fas fa-briefcase sidebar-icon"></i>
-                <span>My Projects</span>
+                <i className="fas fa-tasks sidebar-icon"></i>
+                <span>Active Projects</span>
               </NavLink>
 
               <NavLink 
-                to={`/dashboard/${role}/hire`} 
+                to={`/dashboard/${role}/proposals`} 
                 className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
               >
-                <i className="fas fa-user-plus sidebar-icon"></i>
-                <span>Hire Freelancers</span>
+                <i className="fas fa-file-alt sidebar-icon"></i>
+                <span>Review Proposals</span>
+              </NavLink>
+
+              <NavLink 
+                to={`/dashboard/${role}/jobs`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-briefcase sidebar-icon"></i>
+                <span>My Jobs</span>
+              </NavLink>
+
+              <NavLink 
+                to={`/dashboard/${role}/post-job`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-plus-circle sidebar-icon"></i>
+                <span>Post a Job</span>
               </NavLink>
             </>
           )}
 
           {role === 'freelancer' && (
             <>
+              <NavLink 
+                to={`/dashboard/${role}/active-projects`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-tasks sidebar-icon"></i>
+                <span>Active Projects</span>
+              </NavLink>
+              
               <NavLink 
                 to={`/dashboard/${role}/jobs`} 
                 className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}

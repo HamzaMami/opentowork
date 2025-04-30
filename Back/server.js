@@ -12,6 +12,8 @@ import clientProfileRoutes from './routes/profiles/client.js';
 import freelancerProfileRoutes from './routes/profiles/freelancer.js';
 import walletRoutes from './routes/wallet.js';
 import chatRoutes from './routes/chat.js';
+import contactRoutes from './routes/contact.js';
+import jobsRoutes from './routes/jobs.js';
 
 dotenv.config();
 
@@ -75,6 +77,8 @@ app.use('/api/profile/client', clientProfileRoutes);
 app.use('/api/profile/freelancer', freelancerProfileRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/jobs', jobsRoutes);
 
 // Default route
 app.get('/', (req, res) => {
