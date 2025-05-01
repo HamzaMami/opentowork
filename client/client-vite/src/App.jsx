@@ -18,6 +18,8 @@ import PostJob from './components/dashboard/PostJob';
 import Proposals from './components/dashboard/Proposals';
 import ActiveProjects from './components/dashboard/ActiveProjects';
 import ProposalReview from './components/dashboard/ProposalReview';
+import ManageJobs from './components/dashboard/ManageJobs';
+import EditJob from './components/dashboard/EditJob';
 import Jobs from './components/Jobs';
 import JobDetails from './components/jobs/JobDetails';
 import { Button } from './components/ui/button';
@@ -85,6 +87,18 @@ function App() {
                   )}
                 </ProtectedRoute>
               } />
+              {/* Add the missing route to view proposals for a specific job */}
+              <Route path="proposals/:jobId" element={
+                <ProtectedRoute>
+                  {({ user }) => (
+                    user.role === 'client' ? (
+                      <ProposalReview />
+                    ) : (
+                      <Navigate to="/dashboard/freelancer/proposals" replace />
+                    )
+                  )}
+                </ProtectedRoute>
+              } />
               <Route path="post-job" element={<PostJob />} />
               <Route 
                 path="hire" 
@@ -119,21 +133,7 @@ function App() {
                   <ProtectedRoute>
                     {({ user }) => (
                       user.role === 'client' ? (
-                        <div className="dashboard-section">
-                          <h2 className="dashboard-section-title">My Posted Jobs</h2>
-                          <p>View and manage your job listings.</p>
-                          <div className="coming-soon-message" style={{ 
-                            padding: "2rem", 
-                            backgroundColor: "#ebf5ff", 
-                            borderRadius: "8px", 
-                            textAlign: "center", 
-                            marginTop: "2rem" 
-                          }}>
-                            <i className="fas fa-list" style={{ fontSize: "3rem", color: "#2563eb", marginBottom: "1rem" }}></i>
-                            <h3>Coming Soon</h3>
-                            <p>You'll be able to manage your posted jobs and proposals here soon!</p>
-                          </div>
-                        </div>
+                        <ManageJobs />
                       ) : (
                         <div className="dashboard-section">
                           <h2 className="dashboard-section-title">Available Jobs</h2>

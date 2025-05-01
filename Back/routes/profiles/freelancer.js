@@ -61,6 +61,38 @@ router.get('/', protect, freelancer, async (req, res) => {
   }
 });
 
+// @route   GET /api/profile/freelancer/user/:userId
+// @desc    Get freelancer profile by user ID (public)
+// @access  Public
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const freelancerProfile = await FreelancerProfile.findOne({ user: req.params.userId })
+      .select('skills bio profileImage');
+    
+    if (!freelancerProfile) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Freelancer profile not found' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        skills: freelancerProfile.skills,
+        bio: freelancerProfile.bio,
+        profileImage: freelancerProfile.profileImage
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 // @route   POST /api/profile/freelancer
 // @desc    Create freelancer profile
 // @access  Private (freelancer only)

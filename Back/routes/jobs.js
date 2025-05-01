@@ -1,5 +1,6 @@
 import express from 'express';
 import Job from '../models/Job.js';
+import Wallet from '../models/Wallet.js';
 import { protect } from '../middleware/auth.js';
 import mongoose from 'mongoose';
 
@@ -937,6 +938,189 @@ router.put('/:jobId/proposals/:proposalId/accept', protect, async (req, res) => 
     });
   } catch (err) {
     console.error('Error accepting proposal:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: err.message
+    });
+  }
+});
+
+// Update job status (job owner or assigned freelancer)
+router.put('/:jobId/status', protect, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { status } = req.body;
+    
+    // Check if ID is valid
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid job ID format'
+      });
+    }
+    
+    // Find job with populated client and freelancer information
+    const job = await Job.findById(jobId)
+      .populate('client', '_id name')
+      .populate('freelancer', '_id name');
+    
+    // Check if job exists
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+    
+    // Check permissions - only allow client (job owner) or assigned freelancer
+    const isOwner = job.client._id.toString() === req.user.id;
+    const isAssignedFreelancer = job.freelancer && job.freelancer._id.toString() === req.user.id;
+    
+    if (!isOwner && !isAssignedFreelancer) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only update status for your own jobs or jobs assigned to you.'
+      });
+    }
+    
+    // Validate the requested status change
+    const validStatusTransitions = {
+      'open': ['in-progress', 'cancelled'],
+      'in-progress': ['completed', 'cancelled'],
+      'active': ['completed', 'cancelled'],
+      'ongoing': ['completed', 'cancelled'],
+      'completed': [],  // completed is final
+      'cancelled': []   // cancelled is final
+    };
+    
+    if (!validStatusTransitions[job.status]?.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change job status from '${job.status}' to '${status}'`
+      });
+    }
+    
+    // If client is marking job as completed
+    if (isOwner && status === 'completed') {
+      // Process payment from client to freelancer
+      if (job.freelancer) {
+        try {
+          // Get the amount to be paid (from the accepted proposal or job budget)
+          let paymentAmount = 0;
+          const acceptedProposal = job.proposals.find(p => p.status === 'accepted');
+          
+          if (acceptedProposal && acceptedProposal.price) {
+            paymentAmount = acceptedProposal.price;
+          } else if (job.budget.amount) {
+            paymentAmount = job.budget.amount;
+          } else if (job.budget.min && job.budget.max) {
+            // If no fixed amount, use the average of min and max
+            paymentAmount = (job.budget.min + job.budget.max) / 2;
+          }
+          
+          if (paymentAmount <= 0) {
+            return res.status(400).json({
+              success: false,
+              message: 'Cannot complete project with invalid payment amount'
+            });
+          }
+          
+          // Get client wallet
+          const clientWallet = await Wallet.findOne({ user: job.client._id });
+          if (!clientWallet) {
+            return res.status(404).json({
+              success: false,
+              message: 'Client wallet not found'
+            });
+          }
+          
+          // Check if client has enough balance
+          if (clientWallet.balance < paymentAmount) {
+            return res.status(400).json({
+              success: false,
+              message: 'Insufficient funds in client wallet'
+            });
+          }
+          
+          // Get or create freelancer wallet
+          let freelancerWallet = await Wallet.findOne({ user: job.freelancer._id });
+          if (!freelancerWallet) {
+            freelancerWallet = new Wallet({ user: job.freelancer._id });
+          }
+          
+          // Create transaction for client (payment)
+          const clientTransaction = {
+            amount: paymentAmount,
+            type: 'payment',
+            status: 'completed',
+            description: `Payment for project: ${job.title}`,
+            reference: `PAY-${job._id}`,
+            relatedProject: job._id
+          };
+          
+          // Create transaction for freelancer (receive)
+          const freelancerTransaction = {
+            amount: paymentAmount,
+            type: 'receive',
+            status: 'completed',
+            description: `Payment received for project: ${job.title}`,
+            reference: `REC-${job._id}`,
+            relatedProject: job._id
+          };
+          
+          // Update balances and add transactions
+          clientWallet.balance -= paymentAmount;
+          clientWallet.transactions.push(clientTransaction);
+          
+          freelancerWallet.balance += paymentAmount;
+          freelancerWallet.transactions.push(freelancerTransaction);
+          
+          // Save both wallets
+          await clientWallet.save();
+          await freelancerWallet.save();
+          
+          console.log(`Payment of $${paymentAmount} processed from client ${job.client.name} to freelancer ${job.freelancer.name}`);
+        } catch (error) {
+          console.error('Error processing payment:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Error processing payment',
+            error: error.message
+          });
+        }
+      }
+      
+      // Update job status after successful payment
+      job.status = 'completed';
+      job.completedAt = Date.now();
+    } 
+    // If freelancer is marking job as completed, we might want to handle differently
+    // For now, let's allow it to be directly marked as completed
+    else if (isAssignedFreelancer && status === 'completed') {
+      job.status = 'completed';
+      job.completedAt = Date.now();
+    }
+    // For other valid status changes
+    else {
+      job.status = status;
+      
+      // Set additional timestamps as needed
+      if (status === 'cancelled') {
+        job.cancelledAt = Date.now();
+      }
+    }
+    
+    // Save the updated job
+    await job.save();
+    
+    res.status(200).json({
+      success: true,
+      message: `Job status updated to '${status}'`,
+      data: job
+    });
+  } catch (err) {
+    console.error('Error updating job status:', err);
     res.status(500).json({
       success: false,
       message: 'Server error',

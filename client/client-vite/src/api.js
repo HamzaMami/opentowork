@@ -213,6 +213,9 @@ export const jobsAPI = {
   // Update an existing job
   updateJob: (id, jobData) => api.put(`/jobs/${id}`, jobData),
   
+  // Update job status
+  updateJobStatus: (jobId, statusData) => api.put(`/jobs/${jobId}/status`, statusData),
+  
   // Delete a job
   deleteJob: (id) => api.delete(`/jobs/${id}`),
   

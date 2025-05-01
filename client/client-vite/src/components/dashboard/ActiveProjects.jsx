@@ -4,7 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { jobsAPI } from '../../api';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { getImageUrl } from '../../utils/imageUtils';
+import { getImageUrl, createImageErrorHandler } from '../../utils/imageUtils';
+import ProfileHoverCard from '../ui/ProfileHoverCard';
 import './ActiveProjects.css';
 
 const ActiveProjects = () => {
@@ -15,6 +16,75 @@ const ActiveProjects = () => {
   const [error, setError] = useState(null);
   const userRole = user?.role;
   const [filter, setFilter] = useState('all');
+  
+  // Add hover states for ProfileHoverCard
+  const [hoverUser, setHoverUser] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState(null);
+  const [hoverIsVisible, setHoverIsVisible] = useState(false);
+
+  // Add this function to prevent unnecessary re-renders
+  const handleProfileEnter = (userData, e) => {
+    // Prevent handling if we're already showing this user's profile
+    if (hoverIsVisible && hoverUser?._id === userData?._id) {
+      return;
+    }
+    
+    handleProfileHover(userData, e);
+  };
+
+  // Replace the existing hover functions with these improved ones
+  const handleProfileHover = (userData, e) => {
+    if (!userData || !userData._id) {
+      console.log('No valid user data for hover card');
+      return;
+    }
+    
+    // Get the relative position only once to avoid layout shifts
+    const rect = e.currentTarget.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const estimatedCardHeight = 300;
+    
+    // Only check space once - don't recalculate during hover
+    const spaceBelow = windowHeight - rect.bottom;
+    const isAbove = spaceBelow < estimatedCardHeight;
+    
+    // Calculate position statically without any animations
+    let position;
+    if (isAbove) {
+      position = {
+        top: Math.max(rect.top - estimatedCardHeight - 10, 10),
+        left: rect.left
+      };
+    } else {
+      position = {
+        top: rect.bottom + 10,
+        left: rect.left
+      };
+    }
+    
+    // Only update hover state if it's a different user to prevent flickering
+    if (!hoverIsVisible || hoverUser?._id !== userData._id) {
+      setHoverPosition(position);
+      setHoverUser(userData);
+      // We use requestAnimationFrame to ensure smooth transitions
+      requestAnimationFrame(() => {
+        setHoverIsVisible(true);
+      });
+    }
+  };
+
+  const handleProfileLeave = () => {
+    // Simply hide the card without animation to prevent jitter
+    setHoverIsVisible(false);
+  };
+
+  // Helper function to get first letter for avatar placeholder
+  const getInitial = (name) => {
+    if (name && typeof name === 'string' && name.length > 0) {
+      return name.charAt(0).toUpperCase();
+    }
+    return 'U'; // "U" for User
+  };
 
   useEffect(() => {
     const fetchActiveProjects = async () => {
@@ -162,6 +232,11 @@ const ActiveProjects = () => {
           if (userRole === 'freelancer') {
             // Include any job that's active OR where the freelancer is assigned
             projectsToShow = response.data.data.filter(job => {
+              // First, exclude completed and cancelled projects
+              if (job.status === 'completed' || job.status === 'cancelled') {
+                return false;
+              }
+              
               // Check job status
               const isActiveStatus = job.status === 'in-progress' || 
                                     job.status === 'active' || 
@@ -473,18 +548,29 @@ const ActiveProjects = () => {
                 <div className="freelancer-info-section">
                   <h4>Freelancer</h4>
                   <div className="project-freelancer">
-                    <div className="freelancer-avatar">
+                    <div 
+                      className="freelancer-avatar"
+                      onMouseEnter={(e) => project.assignedFreelancer?._id && handleProfileEnter(project.assignedFreelancer, e)}
+                      onMouseLeave={handleProfileLeave}
+                    >
                       {project.assignedFreelancer?.profileImage ? (
                         <img 
                           src={getImageUrl(project.assignedFreelancer.profileImage)} 
                           alt={project.assignedFreelancer?.name || 'Freelancer'} 
+                          onError={createImageErrorHandler(project.assignedFreelancer.name)}
                         />
                       ) : (
-                        <i className="fas fa-user"></i>
+                        <div className="freelancer-avatar-placeholder">
+                          {getInitial(project.assignedFreelancer?.name || 'Freelancer')}
+                        </div>
                       )}
                     </div>
                     <div>
-                      <h5>
+                      <h5
+                        className="hoverable-name"
+                        onMouseEnter={(e) => project.assignedFreelancer?._id && handleProfileEnter(project.assignedFreelancer, e)}
+                        onMouseLeave={handleProfileLeave}
+                      >
                         {project.assignedFreelancer?.name || 
                          (project.proposals?.find(p => p.status === 'accepted')?.freelancer?.name) || 
                          'Freelancer'}
@@ -503,18 +589,31 @@ const ActiveProjects = () => {
                   <div className="client-info-section">
                     <h4>Client</h4>
                     <div className="project-client">
-                      <div className="client-avatar">
+                      <div 
+                        className="client-avatar"
+                        onMouseEnter={(e) => project.client?._id && handleProfileEnter(project.client, e)}
+                        onMouseLeave={handleProfileLeave}
+                      >
                         {project.client?.profileImage ? (
                           <img 
                             src={getImageUrl(project.client.profileImage)} 
-                            alt={project.client.name} 
+                            alt={project.client?.name || 'Client'} 
+                            onError={createImageErrorHandler(project.client.name)}
                           />
                         ) : (
-                          <i className="fas fa-user"></i>
+                          <div className="client-avatar-placeholder">
+                            {getInitial(project.client?.name || 'Client')}
+                          </div>
                         )}
                       </div>
                       <div>
-                        <h5>{project.client?.name || 'Client'}</h5>
+                        <h5
+                          className="hoverable-name"
+                          onMouseEnter={(e) => project.client?._id && handleProfileEnter(project.client, e)}
+                          onMouseLeave={handleProfileLeave}
+                        >
+                          {project.client?.name || 'Client'}
+                        </h5>
                       </div>
                     </div>
                   </div>
@@ -527,9 +626,12 @@ const ActiveProjects = () => {
                           <img 
                             src={getImageUrl(freelancerProfile.profileImage)} 
                             alt={user.name} 
+                            onError={createImageErrorHandler(user.name)}
                           />
                         ) : (
-                          <i className="fas fa-user"></i>
+                          <div className="freelancer-avatar-placeholder">
+                            {getInitial(user.name)}
+                          </div>
                         )}
                       </div>
                       <div>
@@ -543,9 +645,7 @@ const ActiveProjects = () => {
               <div className="project-actions">
                 <Button 
                   className="message-btn"
-                  onClick={() => navigate(`/dashboard/${userRole}/chat/${userRole === 'client' 
-                    ? project.assignedFreelancer?._id 
-                    : project.client?._id}`)}
+                  onClick={() => navigate(`/dashboard/${userRole}/chat`)}
                 >
                   <i className="fas fa-comment"></i> Message
                 </Button>
@@ -570,6 +670,17 @@ const ActiveProjects = () => {
           </Card>
         ))}
       </div>
+
+      {/* Add the ProfileHoverCard at the end of the component */}
+      {hoverIsVisible && hoverUser && (
+        <ProfileHoverCard 
+          user={hoverUser} 
+          isVisible={hoverIsVisible}
+          position={hoverPosition} 
+          onMouseEnter={() => setHoverIsVisible(true)}
+          onMouseLeave={handleProfileLeave} 
+        />
+      )}
     </div>
   );
 };

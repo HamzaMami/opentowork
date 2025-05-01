@@ -114,6 +114,31 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
+// Get user skills by ID - Public endpoint
+router.get('/:id/skills', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('role');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    if (user.role !== 'freelancer') {
+      return res.status(400).json({ message: 'User is not a freelancer' });
+    }
+    
+    // Fetch freelancer profile data
+    const freelancerProfile = await FreelancerProfile.findOne({ user: req.params.id }).select('skills');
+    
+    // Return skills even if they're empty
+    res.json({ 
+      userId: req.params.id,
+      skills: freelancerProfile ? freelancerProfile.skills : ''
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Create a new user - Admin only
 router.post('/', protect, admin, async (req, res) => {
   try {

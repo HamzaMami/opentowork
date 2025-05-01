@@ -18,10 +18,13 @@ export const getImageUrl = (imagePath) => {
   
   // Handle relative paths that might start with 'uploads/'
   if (imagePath.includes('uploads/')) {
-    const pathWithoutUploads = imagePath.substring(imagePath.indexOf('uploads/'));
-    const normalizedPath = pathWithoutUploads.startsWith('/') ? pathWithoutUploads : `/${pathWithoutUploads}`;
+    // Extract the path from uploads/ onwards, regardless of where it appears in the string
+    const uploadsIndex = imagePath.indexOf('uploads/');
+    const pathFromUploads = imagePath.substring(uploadsIndex);
+    
+    // Make sure the path is properly normalized
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    return `${baseUrl}${normalizedPath}`;
+    return `${baseUrl}/${pathFromUploads}`;
   }
 
   // Make sure path starts with a slash for other cases

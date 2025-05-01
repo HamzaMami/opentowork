@@ -72,7 +72,7 @@ const ManageJobs = () => {
   };
 
   const handleViewProposals = (jobId) => {
-    navigate(`/dashboard/client/job/${jobId}/proposals`);
+    navigate(`/dashboard/client/proposals/${jobId}`);
   };
   
   const handleViewJobDetails = (jobId) => {

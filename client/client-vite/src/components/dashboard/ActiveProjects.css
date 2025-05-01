@@ -323,3 +323,41 @@
   display: block;
   margin-top: 4px;
 }
+
+/* Add to the end of the existing CSS file */
+
+/* Profile hover card styles */
+.hoverable-name {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  position: relative;
+}
+
+.hoverable-name:hover {
+  color: #5469d4;
+  text-decoration: underline;
+}
+
+.freelancer-avatar,
+.client-avatar {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.freelancer-avatar:hover,
+.client-avatar:hover {
+  transform: scale(1.05);
+}
+
+.freelancer-avatar-placeholder,
+.client-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #e2e8f0;
+  color: #64748b;
+  font-weight: bold;
+  border-radius: 50%;
+}

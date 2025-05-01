@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jobsAPI } from '../../api';
+import { jobsAPI, usersAPI } from '../../api';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
+import ProfileHoverCard from '../ui/ProfileHoverCard';
+import { getImageUrl } from '../../utils/imageUtils';
 import './ProposalReview.css';
 
 const ProposalReview = () => {
@@ -11,6 +13,10 @@ const ProposalReview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedJob, setExpandedJob] = useState(null);
+  const [hoverUser, setHoverUser] = useState(null);
+  const [hoverPosition, setHoverPosition] = useState(null);
+  const [hoverIsVisible, setHoverIsVisible] = useState(false);
+  const [freelancersData, setFreelancersData] = useState({});
 
   useEffect(() => {
     const fetchClientJobs = async () => {
@@ -22,7 +28,97 @@ const ProposalReview = () => {
           const jobsWithProposals = response.data.data.filter(
             job => job.proposals && job.proposals.length > 0
           );
-          setJobs(jobsWithProposals);
+          
+          console.log('Jobs with proposals:', jobsWithProposals);
+          
+          // Collect all freelancer IDs to fetch
+          const freelancerIds = new Set();
+          jobsWithProposals.forEach(job => {
+            job.proposals.forEach(proposal => {
+              if (proposal.freelancer) {
+                // If freelancer is a string (just an ID)
+                if (typeof proposal.freelancer === 'string') {
+                  freelancerIds.add(proposal.freelancer);
+                } 
+                // If freelancer is an object with _id
+                else if (proposal.freelancer._id) {
+                  freelancerIds.add(proposal.freelancer._id);
+                }
+              }
+            });
+          });
+          
+          // Fetch data for all freelancers in one go
+          const freelancerDataMap = {};
+          await Promise.all([...freelancerIds].map(async (freelancerId) => {
+            try {
+              const userResponse = await usersAPI.getById(freelancerId);
+              if (userResponse.data) {
+                freelancerDataMap[freelancerId] = {
+                  _id: freelancerId,
+                  name: userResponse.data.name || 'Freelancer',
+                  email: userResponse.data.email,
+                  profileImage: userResponse.data.profileImage,
+                  // Store the complete user data too
+                  userData: userResponse.data
+                };
+              }
+            } catch (err) {
+              console.error(`Failed to fetch data for freelancer ID ${freelancerId}:`, err);
+            }
+          }));
+          
+          setFreelancersData(freelancerDataMap);
+          
+          // Now enhance the jobs with this data where needed
+          const enhancedJobs = jobsWithProposals.map(job => {
+            if (job.proposals) {
+              job.proposals = job.proposals.map(proposal => {
+                const originalFreelancer = proposal.freelancer;
+                
+                // Handle string IDs
+                if (typeof originalFreelancer === 'string') {
+                  const freelancerId = originalFreelancer;
+                  const freelancerData = freelancerDataMap[freelancerId];
+                  
+                  if (freelancerData) {
+                    proposal.freelancer = { 
+                      ...freelancerData,
+                      // Keep the original ID
+                      _id: freelancerId
+                    };
+                  } else {
+                    // Create a placeholder if we couldn't load the data
+                    proposal.freelancer = {
+                      _id: freelancerId,
+                      name: 'Freelancer',
+                      isPlaceholder: true
+                    };
+                  }
+                }
+                // Handle cases where freelancer is already an object but might be missing data
+                else if (originalFreelancer && originalFreelancer._id) {
+                  const freelancerData = freelancerDataMap[originalFreelancer._id];
+                  
+                  if (freelancerData) {
+                    // Enhance with additional data, but keep original data as well
+                    proposal.freelancer = {
+                      ...originalFreelancer,
+                      name: originalFreelancer.name || freelancerData.name,
+                      email: originalFreelancer.email || freelancerData.email,
+                      profileImage: originalFreelancer.profileImage || freelancerData.profileImage,
+                      userData: freelancerData.userData
+                    };
+                  }
+                }
+                
+                return proposal;
+              });
+            }
+            return job;
+          });
+          
+          setJobs(enhancedJobs);
         } else {
           setError('Failed to fetch jobs');
         }
@@ -86,6 +182,49 @@ const ProposalReview = () => {
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  const handleProfileHover = (userId, e) => {
+    if (!userId) {
+      console.error('No user ID provided for hover card');
+      return;
+    }
+    
+    // Calculate position for the hover card
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = {
+      top: rect.bottom + window.scrollY + 10, // 10px below the element
+      left: rect.left + window.scrollX,
+    };
+    
+    // Get the user data
+    const userData = freelancersData[userId] || { _id: userId };
+    
+    setHoverPosition(position);
+    setHoverUser(userData);
+    setHoverIsVisible(true);
+  };
+
+  const handleProfileLeave = () => {
+    // Use a small timeout to prevent flickering when moving from name to avatar
+    setTimeout(() => {
+      setHoverIsVisible(false);
+    }, 100);
+  };
+
+  // Helper function to get freelancer name safely
+  const getFreelancerName = (proposal) => {
+    if (!proposal || !proposal.freelancer) return 'Freelancer';
+    
+    return proposal.freelancer.name || 'Freelancer';
+  };
+  
+  // Helper function to get first letter for avatar placeholder
+  const getInitial = (name) => {
+    if (name && typeof name === 'string' && name.length > 0) {
+      return name.charAt(0).toUpperCase();
+    }
+    return 'F';
   };
 
   if (loading) {
@@ -167,23 +306,57 @@ const ProposalReview = () => {
                     </div>
                   ) : null}
 
-                  {job.proposals.map((proposal) => (
+                  {job.proposals && job.proposals.length > 0 ? job.proposals.map((proposal) => {
+                    // Safety check for proposal data
+                    if (!proposal) {
+                      console.error('Invalid proposal data');
+                      return null;
+                    }
+                    
+                    // Ensure freelancer data exists
+                    if (!proposal.freelancer) {
+                      console.error('Missing freelancer data in proposal:', proposal._id);
+                      return null;
+                    }
+                    
+                    const freelancerName = getFreelancerName(proposal);
+                    const freelancerId = proposal.freelancer._id;
+                    
+                    return (
                     <Card key={proposal._id} className={`proposal-card proposal-${proposal.status}`}>
                       <CardContent>
                         <div className="proposal-header">
                           <div className="freelancer-info">
-                            <div className="freelancer-avatar">
+                            <div 
+                              className="freelancer-avatar"
+                              onMouseEnter={(e) => handleProfileHover(freelancerId, e)}
+                              onMouseLeave={handleProfileLeave}
+                            >
                               {proposal.freelancer.profileImage ? (
                                 <img 
-                                  src={proposal.freelancer.profileImage} 
-                                  alt={proposal.freelancer.name} 
+                                  src={getImageUrl(proposal.freelancer.profileImage)} 
+                                  alt={freelancerName}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.style.display = 'none';
+                                    const initial = getInitial(freelancerName);
+                                    e.target.parentElement.innerHTML = `<div class="freelancer-avatar-placeholder">${initial}</div>`;
+                                  }}
                                 />
                               ) : (
-                                <i className="fas fa-user"></i>
+                                <div className="freelancer-avatar-placeholder">
+                                  {getInitial(freelancerName)}
+                                </div>
                               )}
                             </div>
                             <div>
-                              <h4>{proposal.freelancer.name}</h4>
+                              <h4 
+                                className="freelancer-name"
+                                onMouseEnter={(e) => handleProfileHover(freelancerId, e)}
+                                onMouseLeave={handleProfileLeave}
+                              >
+                                {freelancerName}
+                              </h4>
                               <p className="proposal-date">
                                 Submitted {formatDate(proposal.createdAt)}
                               </p>
@@ -218,17 +391,19 @@ const ProposalReview = () => {
                         <div className="proposal-details">
                           <div className="proposal-detail">
                             <i className="fas fa-money-bill-wave"></i>
-                            <span>Bid: ${proposal.price ? proposal.price.toFixed(2) : 'N/A'}</span>
-                            {job.budget.type === 'hourly' && <span className="rate-label">/hr</span>}
+                            <span>Bid: ${proposal.price ? parseFloat(proposal.price).toFixed(2) : 'N/A'}</span>
+                            {job.budget && job.budget.type === 'hourly' && <span className="rate-label">/hr</span>}
                           </div>
 
-                          <div className="proposal-detail">
-                            <i className="fas fa-clock"></i>
-                            <span>
-                              Estimated Time: {proposal.estimatedTime.value} {proposal.estimatedTime.unit}
-                              {proposal.estimatedTime.value > 1 ? 's' : ''}
-                            </span>
-                          </div>
+                          {proposal.estimatedTime && (
+                            <div className="proposal-detail">
+                              <i className="fas fa-clock"></i>
+                              <span>
+                                Estimated Time: {proposal.estimatedTime.value} {proposal.estimatedTime.unit}
+                                {proposal.estimatedTime.value > 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="proposal-cover-letter">
@@ -242,13 +417,13 @@ const ProposalReview = () => {
                           <div className="proposal-actions">
                             <Button 
                               className="message-btn"
-                              onClick={() => navigate(`/dashboard/client/chat/${proposal.freelancer._id}`)}
+                              onClick={() => navigate(`/dashboard/client/chat`)}
                             >
                               <i className="fas fa-comment"></i> Message Freelancer
                             </Button>
                             <Button 
                               className="view-project-btn"
-                              onClick={() => navigate(`/dashboard/client/projects/${job._id}`)}
+                              onClick={() => navigate(`/dashboard/client/projects`)}
                             >
                               <i className="fas fa-project-diagram"></i> View Project
                             </Button>
@@ -256,13 +431,28 @@ const ProposalReview = () => {
                         )}
                       </CardContent>
                     </Card>
-                  ))}
+                  )}) : (
+                    <div className="no-proposals-message">
+                      <p>No proposals found for this job.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Profile hover card */}
+      {hoverUser && hoverIsVisible && (
+        <ProfileHoverCard 
+          user={hoverUser}
+          isVisible={hoverIsVisible}
+          position={hoverPosition}
+          onMouseEnter={() => setHoverIsVisible(true)}
+          onMouseLeave={handleProfileLeave}
+        />
+      )}
     </div>
   );
 };

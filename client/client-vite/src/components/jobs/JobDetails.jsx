@@ -28,6 +28,32 @@ const JobDetails = () => {
   const [similarJobs, setSimilarJobs] = useState([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
 
+  // Define fetchSimilarJobs before using it in useEffect
+  const fetchSimilarJobs = async (category) => {
+    setIsLoadingSimilar(true);
+    try {
+        // Filter by category and exclude current job
+        const response = await jobsAPI.getJobs({ 
+          category, 
+          status: 'open',
+          limit: 4
+        });
+        
+        if (response.data.success) {
+          // Filter out the current job and limit to 3
+          const filtered = response.data.data
+            .filter(item => item._id !== jobId)
+            .slice(0, 3);
+            
+          setSimilarJobs(filtered);
+        }
+      } catch (err) {
+        console.error('Error fetching similar jobs:', err);
+      } finally {
+        setIsLoadingSimilar(false);
+      }
+    };
+
   useEffect(() => {
     const fetchJobDetails = async () => {
       setIsLoading(true);
@@ -36,9 +62,9 @@ const JobDetails = () => {
         if (response.data.success) {
           setJob(response.data.data);
           
-          // Fetch similar jobs based on category and skills
+          // Fetch similar jobs based on category
           if (response.data.data.category) {
-            fetchSimilarJobs(response.data.data.category, response.data.data.skills);
+            fetchSimilarJobs(response.data.data.category);
           }
         } else {
           setError('Failed to fetch job details');
@@ -54,32 +80,8 @@ const JobDetails = () => {
     if (jobId) {
       fetchJobDetails();
     }
-  }, [jobId]); // Remove fetchSimilarJobs from dependency array
-
-  const fetchSimilarJobs = async (category, skills = []) => {
-    setIsLoadingSimilar(true);
-    try {
-      // Filter by category and exclude current job
-      const response = await jobsAPI.getJobs({ 
-        category, 
-        status: 'open',
-        limit: 4
-      });
-      
-      if (response.data.success) {
-        // Filter out the current job and limit to 3
-        const filtered = response.data.data
-          .filter(item => item._id !== jobId)
-          .slice(0, 3);
-          
-        setSimilarJobs(filtered);
-      }
-    } catch (err) {
-      console.error('Error fetching similar jobs:', err);
-    } finally {
-      setIsLoadingSimilar(false);
-    }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobId]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown date';
@@ -134,6 +136,7 @@ const JobDetails = () => {
       if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
       return `${Math.floor(diffDays / 365)} years ago`;
     } catch (error) {
+      console.error('Error formatting time ago:', error);
       // Silently handle the error and return empty string
       return '';
     }
@@ -254,6 +257,14 @@ const JobDetails = () => {
     navigate(`/jobs/${id}`);
   };
 
+  // Helper function to safely format currency
+  const formatCurrency = (value) => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0';
+    }
+    return Number(value).toLocaleString();
+  };
+
   if (isLoading) {
     return (
       <div className="job-details-container">
@@ -339,11 +350,11 @@ const JobDetails = () => {
                 <h3>Budget</h3>
                 <div className="budget-display">
                   <span className="budget-amount">
-                    ${job.budget.min.toLocaleString()} - ${job.budget.max.toLocaleString()}
-                    {job.budget.type === 'hourly' && '/hr'}
+                    ${formatCurrency(job.budget?.min)} - ${formatCurrency(job.budget?.max)}
+                    {job.budget?.type === 'hourly' && '/hr'}
                   </span>
                   <span className="budget-type">
-                    {job.budget.type === 'fixed' ? 'Fixed Price' : 'Hourly Rate'}
+                    {job.budget?.type === 'fixed' ? 'Fixed Price' : 'Hourly Rate'}
                   </span>
                 </div>
                 
@@ -629,8 +640,8 @@ const JobDetails = () => {
                       >
                         <div className="similar-job-title">{similarJob.title}</div>
                         <div className="similar-job-budget">
-                          ${similarJob.budget.min} - ${similarJob.budget.max}
-                          {similarJob.budget.type === 'hourly' ? '/hr' : ''}
+                          ${formatCurrency(similarJob.budget?.min)} - ${formatCurrency(similarJob.budget?.max)}
+                          {similarJob.budget?.type === 'hourly' ? '/hr' : ''}
                         </div>
                         <div className="similar-job-posted">
                           Posted {formatTimeAgo(similarJob.createdAt)}
