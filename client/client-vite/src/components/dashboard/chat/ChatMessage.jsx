@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react';
-import '../ChatMessages.css';
+import './ChatMessages.css';
 
 // Memoized message component for better performance
 const ChatMessage = memo(({ message, currentUserId, formatTime, onProfileHover, onProfileLeave, onDeleteMessage }) => {

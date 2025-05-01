@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { chatAPI, usersAPI } from '../../api';
-import io from 'socket.io-client';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "../../../context/AuthContext";
+import { chatAPI, usersAPI } from "../../../api";
+import io from "socket.io-client";
 
 // CSS imports
-import './DashboardBase.css';
+import '../DashboardBase.css';
 import './ChatComponents.css';
 import './ChatMessages.css';
 
 // Component imports
-import ChatSidebar from './chat/ChatSidebar';
-import ChatHeader from './chat/ChatHeader';
-import ChatMessageList from './chat/ChatMessageList';
-import ChatInput from './chat/ChatInput';
-import ProfileHoverCard from './chat/ProfileHoverCard';
+import ChatSidebar from './ChatSidebar';
+import ChatHeader from './ChatHeader';
+import ChatMessageList from './ChatMessageList';
+import ChatInput from './ChatInput';
+import ProfileHoverCard from '../../ui/ProfileHoverCard'; // Updated to use the UI version
 
 // Socket.io connection - use environment variable or fallback
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -39,6 +39,9 @@ const Chat = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
   const profileTimeoutRef = useRef(null);
+  const hoverIntentTimeoutRef = useRef(null); // New ref for hover intent
+  const profileCardRef = useRef(null); // Reference to the hover card DOM element
+  const hoveredUserIdRef = useRef(null); // Track currently hovered user
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -420,78 +423,155 @@ const Chat = () => {
     const rect = element.getBoundingClientRect();
     const isRightSide = rect.left > window.innerWidth / 2;
     
+    // Position the hover card away from clickable areas
+    // Make it appear to the right or left side of the chat area
     return {
       position: 'fixed',
       top: `${rect.bottom + 5}px`,
-      left: isRightSide ? `${rect.right - 280}px` : `${rect.left}px`,
-      zIndex: 1000
+      left: isRightSide ? `${rect.right - 300}px` : `${rect.left + 30}px`,
+      // Ensure it doesn't interfere with chat interactions by setting a lower z-index
+      zIndex: 100 
     };
   }, []);
   
-  // Handle showing profile on hover
+  // Handle showing profile on hover with debounce and hover intent
   const handleProfileMouseEnter = useCallback(async (userId, event) => {
     if (!userId) return;
     
-    // Clear any existing timeout
+    // Store userId to track current hover intent
+    hoveredUserIdRef.current = userId;
+    
+    // Clear any existing timeouts
     if (profileTimeoutRef.current) {
       clearTimeout(profileTimeoutRef.current);
+    }
+    
+    if (hoverIntentTimeoutRef.current) {
+      clearTimeout(hoverIntentTimeoutRef.current);
     }
     
     // Set hover position immediately based on the event target
     if (event && event.currentTarget) {
-      setHoverPosition(calculateHoverPosition(event.currentTarget));
+      // For sidebar items, position the card to the right of the sidebar
+      const isSidebarItem = event.currentTarget.closest('.chat-sidebar');
+      if (isSidebarItem) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setHoverPosition({
+          position: 'fixed',
+          top: `${rect.top}px`,
+          left: `${rect.right + 10}px`, // Position to the right of the sidebar
+          zIndex: 1000
+        });
+      } else {
+        // Regular positioning for other elements
+        setHoverPosition(calculateHoverPosition(event.currentTarget));
+      }
     }
     
-    // Set timeout to fetch and display profile info
-    profileTimeoutRef.current = setTimeout(async () => {
-      try {
-        // Check if we already have this user's profile cached to avoid unnecessary requests
-        if (userProfile && userProfile._id === userId) {
-          // If we already have this profile, just show it
-          setProfileHover(userId);
-          return;
-        }
-        
-        // For user privacy, only display profile info for participants in the current chat
-        // instead of fetching user info for any arbitrary ID
-        if (selectedChatData?.participants) {
-          const participantData = selectedChatData.participants.find(p => p._id === userId);
-          if (participantData) {
-            setUserProfile(participantData);
+    // Use a hover intent approach with a delay to avoid flickering
+    // Only show card if user hovers for at least 300ms
+    hoverIntentTimeoutRef.current = setTimeout(() => {
+      // Check if this is still the most recently hovered user
+      if (hoveredUserIdRef.current !== userId) return;
+      
+      // Set timeout to fetch and display profile info only after hover intent is confirmed
+      profileTimeoutRef.current = setTimeout(async () => {
+        try {
+          // Only proceed if this is still the hovered user
+          if (hoveredUserIdRef.current !== userId) return;
+          
+          // Check if we already have this user's profile cached
+          if (userProfile && userProfile._id === userId) {
+            // If we already have this profile, just show it
             setProfileHover(userId);
             return;
           }
-        }
-        
-        // As a fallback, try to fetch the user profile
-        const response = await usersAPI.getById(userId);
-        setUserProfile(response.data);
-        setProfileHover(userId);
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-        // Show a minimal profile with data we have from the chat
-        if (selectedChatData?.participants) {
-          const participantData = selectedChatData.participants.find(p => p._id === userId);
-          if (participantData) {
-            setUserProfile(participantData);
-            setProfileHover(userId);
+          
+          // For user privacy, check if this is a participant in the current chat
+          if (selectedChatData?.participants) {
+            const participantData = selectedChatData.participants.find(p => p._id === userId);
+            if (participantData) {
+              setUserProfile(participantData);
+              setProfileHover(userId);
+              return;
+            }
+          }
+          
+          // Check if this user is in the search results
+          if (searchResults && searchResults.length > 0) {
+            const searchUser = searchResults.find(u => u._id === userId);
+            if (searchUser) {
+              setUserProfile(searchUser);
+              setProfileHover(userId);
+              return;
+            }
+          }
+          
+          // Check if this user is in the chats list
+          if (chats && chats.length > 0) {
+            for (const chat of chats) {
+              if (chat.participants) {
+                const chatUser = chat.participants.find(p => p._id === userId);
+                if (chatUser) {
+                  setUserProfile(chatUser);
+                  setProfileHover(userId);
+                  return;
+                }
+              }
+            }
+          }
+          
+          // As a fallback, try to fetch the user profile
+          const response = await usersAPI.getById(userId);
+          setUserProfile(response.data);
+          setProfileHover(userId);
+        } catch (err) {
+          console.error('Error fetching profile:', err);
+          // Show a minimal profile with data we have
+          if (chats) {
+            for (const chat of chats) {
+              if (chat.participants) {
+                const chatUser = chat.participants.find(p => p._id === userId);
+                if (chatUser) {
+                  setUserProfile(chatUser);
+                  setProfileHover(userId);
+                  return;
+                }
+              }
+            }
           }
         }
-      }
-    }, 100); // Reduced timeout for better responsiveness
-  }, [calculateHoverPosition, userProfile, selectedChatData]);
+      }, 200);
+    }, 300); // Wait 300ms to confirm hover intent
+  }, [calculateHoverPosition, userProfile, selectedChatData, chats, searchResults]);
   
-  // Handle hiding profile on mouse leave
+  // Handle hiding profile on mouse leave with improved anti-flicker
   const handleProfileMouseLeave = useCallback(() => {
-    // Clear any existing timeout
-    if (profileTimeoutRef.current) {
-      clearTimeout(profileTimeoutRef.current);
+    // Clear hover intent timeout
+    if (hoverIntentTimeoutRef.current) {
+      clearTimeout(hoverIntentTimeoutRef.current);
+      hoverIntentTimeoutRef.current = null;
     }
     
-    // Set timeout to allow moving to the profile card
-    profileTimeoutRef.current = setTimeout(() => {
+    // Clear profile fetch timeout
+    if (profileTimeoutRef.current) {
+      clearTimeout(profileTimeoutRef.current);
+      profileTimeoutRef.current = null;
+    }
+    
+    // Use a small delay before hiding to prevent flickering
+    // This gives time for the mouse to move to the card if that's the intent
+    setTimeout(() => {
+      // Only hide if the mouse isn't over the profile card
+      const profileCard = document.querySelector('.profile-hover-card');
+      if (profileCard && profileCard.matches(':hover')) {
+        return; // Don't hide if hovering over the card
+      }
+      
+      // Reset hover state
       setProfileHover(null);
-    }, 200);
+      hoveredUserIdRef.current = null;
+    }, 50);
   }, []);
   
   // Format timestamp
@@ -811,17 +891,37 @@ const Chat = () => {
       </div>
       
       {/* Profile hover card */}
-      <ProfileHoverCard
-        user={userProfile}
-        isVisible={!!profileHover}
-        position={hoverPosition}
-        onMouseEnter={() => {
-          if (profileTimeoutRef.current) {
-            clearTimeout(profileTimeoutRef.current);
-          }
-        }}
-        onMouseLeave={handleProfileMouseLeave}
-      />
+      {profileHover && (
+        <ProfileHoverCard
+          ref={profileCardRef}
+          user={userProfile}
+          isVisible={!!profileHover}
+          position={{
+            ...hoverPosition,
+            // Override pointer-events to ensure clicks pass through when needed
+            pointerEvents: 'none'  
+          }}
+          onMouseEnter={() => {
+            if (profileTimeoutRef.current) {
+              clearTimeout(profileTimeoutRef.current);
+            }
+            // Re-enable pointer events when actually hovering on the card
+            if (document.querySelector('.profile-hover-card')) {
+              document.querySelector('.profile-hover-card').style.pointerEvents = 'auto';
+            }
+          }}
+          onMouseLeave={() => {
+            // Add delay before hiding when leaving the card itself
+            setTimeout(() => {
+              // Only hide if we're not hovering the trigger element again
+              if (!document.querySelector(`[data-user-id="${profileHover}"]:hover`)) {
+                setProfileHover(null);
+                hoveredUserIdRef.current = null;
+              }
+            }, 100);
+          }}
+        />
+      )}
       
       {/* Error message display */}
       {error && (

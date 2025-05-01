@@ -361,3 +361,40 @@
   font-weight: bold;
   border-radius: 50%;
 }
+
+.status-completion-pending {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.status-completion-confirmed {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.confirm-completion-btn {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.confirm-completion-btn:hover {
+  background-color: #218838;
+}
+
+/* Add a visual indicator for projects waiting for confirmation */
+.project-card .project-header .project-status.status-completion-pending {
+  position: relative;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}

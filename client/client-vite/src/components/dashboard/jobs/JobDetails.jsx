@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { jobsAPI } from '../../api';
-import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
+import { useAuth } from '../../../context/AuthContext';
+import { jobsAPI, usersAPI } from '../../../api';
+import { Button } from '../../ui/button';
+import { Card, CardContent } from '../../ui/card';
+import ProfileHoverCard from '../../ui/ProfileHoverCard';
 import './JobDetails.css';
 
 const JobDetails = () => {
@@ -27,6 +28,10 @@ const JobDetails = () => {
   const [proposalSuccess, setProposalSuccess] = useState('');
   const [similarJobs, setSimilarJobs] = useState([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
+  const [clientProfile, setClientProfile] = useState(null);
+  const [profileHover, setProfileHover] = useState(false);
+  const [hoverPosition, setHoverPosition] = useState({ top: 0, left: 0 });
+  const hoverTimeoutRef = useRef(null);
 
   // Define fetchSimilarJobs before using it in useEffect
   const fetchSimilarJobs = async (category) => {
@@ -62,6 +67,50 @@ const JobDetails = () => {
         if (response.data.success) {
           setJob(response.data.data);
           
+          // Fetch client details including profile picture if client exists
+          if (response.data.data.client && response.data.data.client._id) {
+            try {
+              console.log('Fetching client profile data for:', response.data.data.client._id);
+              const clientResponse = await usersAPI.getById(response.data.data.client._id);
+              if (clientResponse.data) {
+                console.log('Client data received:', clientResponse.data);
+                
+                // Check if createdAt date exists, if not, try to fetch it specifically
+                if (!clientResponse.data.createdAt) {
+                  try {
+                    // Make a specific request to get user account creation date
+                    const userAccountResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/users/${response.data.data.client._id}/account-info`, {
+                      headers: {
+                        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user'))?.token || ''}`
+                      }
+                    });
+                    
+                    if (userAccountResponse.ok) {
+                      const accountData = await userAccountResponse.json();
+                      console.log('Account creation date fetched:', accountData);
+                      
+                      // Merge the account creation date with the client profile
+                      setClientProfile({
+                        ...clientResponse.data,
+                        createdAt: accountData.createdAt
+                      });
+                    } else {
+                      console.warn('Failed to fetch account creation date');
+                      setClientProfile(clientResponse.data);
+                    }
+                  } catch (accountErr) {
+                    console.error('Error fetching user account creation date:', accountErr);
+                    setClientProfile(clientResponse.data);
+                  }
+                } else {
+                  setClientProfile(clientResponse.data);
+                }
+              }
+            } catch (clientErr) {
+              console.error('Error fetching client details:', clientErr);
+            }
+          }
+          
           // Fetch similar jobs based on category
           if (response.data.data.category) {
             fetchSimilarJobs(response.data.data.category);
@@ -95,19 +144,7 @@ const JobDetails = () => {
         return 'Invalid date';
       }
       
-      // Compare year, month, and day to determine if it's today or yesterday
-      const now = new Date();
-      
-      // Check if the date is today
-      if (
-        date.getDate() === now.getDate() &&
-        date.getMonth() === now.getMonth() &&
-        date.getFullYear() === now.getFullYear()
-      ) {
-        return 'Today';
-      }
-      
-      // Format the date in a user-friendly way
+      // Always use the localized date format rather than checking if it's today
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -115,6 +152,31 @@ const JobDetails = () => {
       });
     } catch (error) {
       console.error('Error formatting date:', error);
+      return 'Date format error';
+    }
+  };
+
+  // Format date for display, using a special version for member since date
+  const formatMemberSinceDate = (dateString) => {
+    if (!dateString) return 'Unknown date';
+    
+    try {
+      // Create a date object from the string
+      const date = new Date(dateString);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      // Always format the member since date in a user-friendly way, regardless if it's today
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting member since date:', error);
       return 'Date format error';
     }
   };
@@ -265,6 +327,72 @@ const JobDetails = () => {
     return Number(value).toLocaleString();
   };
 
+  // Handle profile hover
+  const handleProfileMouseEnter = useCallback((event) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    
+    // Determine if we should show the card to the left or right based on available space
+    const spaceOnRight = windowWidth - rect.right;
+    const cardWidth = 300; // approximate width of the hover card
+    
+    // Position the hover card based on available space
+    const position = {
+      position: 'fixed',
+      zIndex: 1000
+    };
+    
+    // If there's not enough space on the right, show to the left
+    if (spaceOnRight < cardWidth + 20) {
+      position.top = `${rect.top}px`;
+      position.right = `${windowWidth - rect.left + 10}px`; // 10px spacing
+      position.left = 'auto';
+    } else {
+      // Default: show to the right
+      position.top = `${rect.top}px`;
+      position.left = `${rect.right + 10}px`; // 10px spacing
+    }
+    
+    setHoverPosition(position);
+    
+    // Add a small delay to prevent flickering on accidental hover
+    hoverTimeoutRef.current = setTimeout(() => {
+      setProfileHover(true);
+    }, 200);
+  }, []);
+  
+  const handleProfileMouseLeave = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    
+    // Add a small delay before hiding
+    hoverTimeoutRef.current = setTimeout(() => {
+      setProfileHover(false);
+    }, 100);
+  }, []);
+  
+  // Function to get image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL, use it as is
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Make sure path starts with a slash
+    const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    
+    // Construct full URL with base API URL
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${baseUrl}${normalizedPath}`;
+  };
+
   if (isLoading) {
     return (
       <div className="job-details-container">
@@ -319,8 +447,7 @@ const JobDetails = () => {
               <div className="job-details-title-section">
                 <h1 className="job-title">{job.title}</h1>
                 <div className="job-posted-info">
-                  <span className="posted-date">Posted {formatTimeAgo(job.createdAt)}</span>
-                  <span className="exact-date">({formatDate(job.createdAt)})</span>
+                  <span className="posted-date">Posted on {formatDate(job.createdAt)}</span>
                 </div>
               </div>
               
@@ -603,21 +730,45 @@ const JobDetails = () => {
           <Card className="client-info-card">
             <CardContent>
               <h3>About the Client</h3>
-              <div className="client-info">
+              <div 
+                className="client-info"
+                onMouseEnter={handleProfileMouseEnter}
+                onMouseLeave={handleProfileMouseLeave}
+              >
+                {clientProfile && clientProfile.profileImage && (
+                  <div className="client-profile-picture">
+                    <img 
+                      src={getImageUrl(clientProfile.profileImage)} 
+                      alt={`${job.client?.name || 'Client'} profile`}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://via.placeholder.com/70?text=' + (job.client?.name?.charAt(0) || 'C');
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="client-name">
                   <i className="fas fa-user"></i>
                   <span>{job.client?.name || 'Anonymous Client'}</span>
                 </div>
                 <div className="client-joined">
                   <i className="fas fa-calendar-alt"></i>
-                  <span>Member since {formatDate(job.client?.createdAt || job.createdAt)}</span>
+                  <span>Member since {formatMemberSinceDate(clientProfile?.createdAt || job.client?.createdAt)}</span>
                 </div>
                 <div className="client-location">
                   <i className="fas fa-map-marker-alt"></i>
                   <span>{job.location || 'Remote'}</span>
                 </div>
               </div>
-              {/* We could add more client details here in the future */}
+              {profileHover && clientProfile && (
+                <ProfileHoverCard 
+                  user={clientProfile} 
+                  isVisible={profileHover}
+                  position={hoverPosition}
+                  onMouseEnter={() => setProfileHover(true)}
+                  onMouseLeave={() => setProfileHover(false)}
+                />
+              )}
             </CardContent>
           </Card>
           

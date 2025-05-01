@@ -1,5 +1,5 @@
 import { createContext, useState, useContext, useEffect } from 'react';
-import { authAPI, clientProfileAPI, freelancerProfileAPI } from '../api';
+import { authAPI, clientProfileAPI, freelancerProfileAPI, adminProfileAPI } from '../api';
 
 const AuthContext = createContext();
 
@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [clientProfile, setClientProfile] = useState(null);
   const [freelancerProfile, setFreelancerProfile] = useState(null);
+  const [adminProfile, setAdminProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -23,6 +24,8 @@ export const AuthProvider = ({ children }) => {
           fetchClientProfile();
         } else if (parsedUser.role === 'freelancer') {
           fetchFreelancerProfile();
+        } else if (parsedUser.role === 'admin') {
+          fetchAdminProfile();
         }
       // eslint-disable-next-line no-unused-vars
       } catch (error) {
@@ -64,6 +67,25 @@ export const AuthProvider = ({ children }) => {
       // If profile doesn't exist yet, that's ok
       if (error.response?.status !== 404) {
         setError(error.response?.data?.message || 'Failed to fetch freelancer profile');
+      }
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch admin profile
+  const fetchAdminProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await adminProfileAPI.get();
+      setAdminProfile(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching admin profile:', error);
+      // If profile doesn't exist yet, that's ok
+      if (error.response?.status !== 404) {
+        setError(error.response?.data?.message || 'Failed to fetch admin profile');
       }
       return null;
     } finally {
@@ -116,6 +138,29 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  
+  // Update or create admin profile
+  const updateAdminProfile = async (profileData) => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      let response;
+      if (adminProfile) {
+        response = await adminProfileAPI.update(profileData);
+      } else {
+        response = await adminProfileAPI.create(profileData);
+      }
+      
+      setAdminProfile(response.data);
+      return response.data;
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update admin profile');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Login function
   const login = async (email, password) => {
@@ -135,6 +180,8 @@ export const AuthProvider = ({ children }) => {
         await fetchClientProfile();
       } else if (userData.role === 'freelancer') {
         await fetchFreelancerProfile();
+      } else if (userData.role === 'admin') {
+        await fetchAdminProfile();
       }
       
       return userData;
@@ -174,6 +221,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setClientProfile(null);
     setFreelancerProfile(null);
+    setAdminProfile(null);
     localStorage.removeItem('user');
   };
 
@@ -205,6 +253,7 @@ export const AuthProvider = ({ children }) => {
         user, 
         clientProfile,
         freelancerProfile,
+        adminProfile,
         loading, 
         error, 
         login, 
@@ -213,6 +262,7 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         updateClientProfile,
         updateFreelancerProfile,
+        updateAdminProfile,
         isAuthenticated: !!user,
       }}
     >

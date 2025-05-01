@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
-import { jobsAPI } from '../../api';
-import './DashboardBase.css';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { jobsAPI } from '../../../api';
+import '../DashboardBase.css';
 import './Proposals.css';
 
 const Proposals = () => {

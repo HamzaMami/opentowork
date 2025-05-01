@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jobsAPI, usersAPI } from '../../api';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
-import ProfileHoverCard from '../ui/ProfileHoverCard';
-import { getImageUrl } from '../../utils/imageUtils';
+import { jobsAPI, usersAPI } from '../../../api';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
+import ProfileHoverCard from '../../ui/ProfileHoverCard';
+import { getImageUrl } from '../../../utils/imageUtils';
 import './ProposalReview.css';
 
 const ProposalReview = () => {

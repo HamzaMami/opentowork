@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import ChatMessage from './ChatMessage';
-import '../ChatMessages.css';
+import './ChatMessages.css';
 
 const ChatMessageList = ({ 
   messages, 

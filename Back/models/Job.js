@@ -61,8 +61,26 @@ const jobSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'in-progress', 'completed', 'cancelled'],
+    enum: ['open', 'in-progress', 'completed', 'cancelled', 'completion-pending'],
     default: 'open'
+  },
+  completionStatus: {
+    clientConfirmed: {
+      type: Boolean,
+      default: false
+    },
+    freelancerConfirmed: {
+      type: Boolean,
+      default: false
+    },
+    clientConfirmedAt: {
+      type: Date,
+      default: null
+    },
+    freelancerConfirmedAt: {
+      type: Date,
+      default: null
+    }
   },
   client: {
     type: mongoose.Schema.Types.ObjectId,

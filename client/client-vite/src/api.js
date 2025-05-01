@@ -148,6 +148,55 @@ export const freelancerProfileAPI = {
   },
 };
 
+// Admin Profile API
+export const adminProfileAPI = {
+  get: () => api.get('/profile/admin'),
+  create: (profileData) => {
+    // If profileData is already FormData, use it directly
+    if (profileData instanceof FormData) {
+      return api.post('/profile/admin', profileData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    
+    // Otherwise, convert object to FormData
+    const formData = new FormData();
+    Object.entries(profileData).forEach(([key, value]) => {
+      if (key === 'profileImage' && value instanceof File) {
+        formData.append('profileImage', value);
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
+    });
+    
+    return api.post('/profile/admin', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  update: (profileData) => {
+    // If profileData is already FormData, use it directly
+    if (profileData instanceof FormData) {
+      return api.put('/profile/admin', profileData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    
+    // Otherwise, convert object to FormData
+    const formData = new FormData();
+    Object.entries(profileData).forEach(([key, value]) => {
+      if (key === 'profileImage' && value instanceof File) {
+        formData.append('profileImage', value);
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
+    });
+    
+    return api.put('/profile/admin', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+};
+
 // Wallet API
 export const walletAPI = {
   getWallet: () => api.get('/wallet'),
@@ -215,6 +264,9 @@ export const jobsAPI = {
   
   // Update job status
   updateJobStatus: (jobId, statusData) => api.put(`/jobs/${jobId}/status`, statusData),
+  
+  // Job completion confirmation endpoint (client or freelancer)
+  confirmJobCompletion: (jobId) => api.post(`/jobs/${jobId}/confirm-completion`),
   
   // Delete a job
   deleteJob: (id) => api.delete(`/jobs/${id}`),

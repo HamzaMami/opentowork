@@ -71,7 +71,8 @@ const ClientDashboard = () => {
         job.status === 'in-progress' || 
         // Add any other statuses that should be considered "active" here
         job.status === 'active' ||
-        job.status === 'ongoing'
+        job.status === 'ongoing' ||
+        job.status === 'completion-pending' // Include jobs pending completion confirmation
       ).length || 0;
       
       const openJobs = jobs.filter(job => job.status === 'open').length || 0;

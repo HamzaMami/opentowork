@@ -1,12 +1,25 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { usersAPI } from '../../api';
 import './ProfileHoverCard.css';
 
-const ProfileHoverCard = memo(({ user, isVisible, position, onMouseEnter, onMouseLeave }) => {
+const ProfileHoverCard = forwardRef(({ user, isVisible, position, onMouseEnter, onMouseLeave }, ref) => {
   const [profileData, setProfileData] = useState(null);
   const [freelancerProfile, setFreelancerProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const cardRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
+  
+  // Combine the ref from forwardRef with our internal ref
+  const setRefs = (element) => {
+    cardRef.current = element;
+    if (ref) {
+      if (typeof ref === 'function') {
+        ref(element);
+      } else {
+        ref.current = element;
+      }
+    }
+  };
   
   // Apply the position and visibility class separately to avoid layout shifts
   useEffect(() => {
@@ -16,21 +29,33 @@ const ProfileHoverCard = memo(({ user, isVisible, position, onMouseEnter, onMous
     
     // First set position without animation
     if (position) {
-      card.style.left = `${position.left}px`;
-      card.style.top = `${position.top}px`;
+      if (position.left) card.style.left = position.left;
+      if (position.top) card.style.top = position.top;
+      if (position.zIndex) card.style.zIndex = position.zIndex;
     }
     
-    // Then in a separate frame, update visibility
-    requestAnimationFrame(() => {
-      if (isVisible) {
-        card.classList.add('visible');
-      } else {
-        card.classList.remove('visible');
+    // Then in a separate frame, update visibility with a small delay to avoid flickering
+    if (isVisible) {
+      // Clear any hiding timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
       }
-    });
+      
+      requestAnimationFrame(() => {
+        card.classList.add('visible');
+      });
+    } else {
+      // Add a small delay before hiding to prevent flickering
+      hoverTimeoutRef.current = setTimeout(() => {
+        card.classList.remove('visible');
+      }, 100);
+    }
     
     return () => {
-      card.classList.remove('visible');
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
     };
   }, [position, isVisible]);
   
@@ -180,14 +205,28 @@ const ProfileHoverCard = memo(({ user, isVisible, position, onMouseEnter, onMous
   // This prevents layout shifts when showing/hiding
   return (
     <div 
-      ref={cardRef}
+      ref={setRefs}
       className="profile-hover-card"
       style={{ 
-        display: isVisible ? 'block' : 'block',
-        visibility: isVisible ? 'visible' : 'hidden' 
+        position: 'fixed',
+        ...(position || {}),
+        pointerEvents: isVisible ? 'auto' : 'none' 
       }}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onMouseEnter={(e) => {
+        // Clear any existing hide timeouts when mouse enters
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
+          hoverTimeoutRef.current = null;
+        }
+        
+        if (onMouseEnter) onMouseEnter(e);
+      }}
+      onMouseLeave={(e) => {
+        // Use a small delay before triggering onMouseLeave
+        hoverTimeoutRef.current = setTimeout(() => {
+          if (onMouseLeave) onMouseLeave(e);
+        }, 50);
+      }}
     >
       <div className="profile-hover-header">
         <div className="profile-hover-avatar">

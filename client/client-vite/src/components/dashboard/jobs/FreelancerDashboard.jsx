@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { walletAPI, jobsAPI } from '../../api';
-import './DashboardBase.css';
+import { useAuth } from '../../../context/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { walletAPI, jobsAPI } from '../../../api';
+import '../DashboardBase.css';
 
 const FreelancerDashboard = () => {
   const { user, freelancerProfile } = useAuth();
@@ -17,8 +17,9 @@ const FreelancerDashboard = () => {
     profileViews: 0
   });
   
-  // State for recent proposals
+  // State for recent proposals and jobs
   const [recentProposals, setRecentProposals] = useState([]);
+  const [recentJobs, setRecentJobs] = useState([]);
   
   // Loading and error states
   const [loading, setLoading] = useState({
@@ -54,17 +55,28 @@ const FreelancerDashboard = () => {
         setLoading(prev => ({
           ...prev,
           wallet: false
-        }));
+        })); 
       }
       
       // Fetch active jobs data
       try {
         const jobsRes = await jobsAPI.getFreelancerJobs();
-        const activeJobs = jobsRes.data?.data?.filter(job => job.status === 'in-progress').length || 0;
+        const jobsData = jobsRes.data?.data || [];
+        
+        // Filter active jobs
+        const activeJobsList = jobsData.filter(job => 
+          ['in-progress', 'active', 'ongoing', 'completion-pending'].includes(job.status)
+        );
+        
+        // Set active jobs count for the stats card
+        const activeJobsCount = activeJobsList.length || 0;
+        
+        // Store the most recent active jobs (up to 3) for display
+        setRecentJobs(activeJobsList.slice(0, 3));
         
         setDashboardData(prev => ({
           ...prev,
-          activeJobs
+          activeJobs: activeJobsCount
         }));
       } catch (err) {
         console.error('Error fetching jobs data:', err);
@@ -230,19 +242,78 @@ const FreelancerDashboard = () => {
         <div className="dashboard-section">
           <h3 className="section-title">Recent Jobs</h3>
           <Card>
-            <CardContent className="dashboard-empty-state">
-              <div className="empty-icon">
-                <i className="fas fa-briefcase"></i>
-              </div>
-              <h4>No active jobs yet</h4>
-              <p>Start applying to available jobs to find work opportunities.</p>
-              <button 
-                className="dashboard-action-button"
-                onClick={() => navigate('/dashboard/freelancer/jobs')}
-              >
-                <i className="fas fa-search"></i> Find Work
-              </button>
-            </CardContent>
+            {loading.jobs ? (
+              <CardContent className="dashboard-loading-state">
+                <div className="loading-spinner"></div>
+                <p>Loading jobs...</p>
+              </CardContent>
+            ) : error.jobs ? (
+              <CardContent className="dashboard-error-state">
+                <div className="error-icon">
+                  <i className="fas fa-exclamation-circle"></i>
+                </div>
+                <p>{error.jobs}</p>
+              </CardContent>
+            ) : recentJobs.length === 0 ? (
+              <CardContent className="dashboard-empty-state">
+                <div className="empty-icon">
+                  <i className="fas fa-briefcase"></i>
+                </div>
+                <h4>No active jobs yet</h4>
+                <p>Start applying to available jobs to find work opportunities.</p>
+                <button 
+                  className="dashboard-action-button"
+                  onClick={() => navigate('/dashboard/freelancer/jobs')}
+                >
+                  <i className="fas fa-search"></i> Find Work
+                </button>
+              </CardContent>
+            ) : (
+              <CardContent className="recent-jobs-list">
+                {recentJobs.map((job) => (
+                  <div key={job._id} className="recent-job-item">
+                    <div className="recent-job-header">
+                      <h4 className="job-title" onClick={() => navigate(`/jobs/${job._id}`)}>
+                        {job.title}
+                      </h4>
+                      <div className={`job-status-badge status-${job.status}`}>
+                        {job.status === 'in-progress' ? 'In Progress' : 
+                         job.status === 'completion-pending' ? 'Pending Completion' : 
+                         job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                      </div>
+                    </div>
+                    <div className="recent-job-details">
+                      <div className="job-detail">
+                        <i className="fas fa-calendar"></i>
+                        <span>Started: {formatDate(job.startDate || job.updatedAt || job.createdAt)}</span>
+                      </div>
+                      <div className="job-detail">
+                        <i className="fas fa-money-bill-wave"></i>
+                        <span>
+                          Budget: ${job.budget?.amount || 
+                                  (job.budget?.min && job.budget?.max ? 
+                                   `${job.budget.min}-${job.budget.max}` : 'N/A')}
+                        </span>
+                      </div>
+                      {job.client && (
+                        <div className="job-detail">
+                          <i className="fas fa-user"></i>
+                          <span>Client: {job.client.name || 'Anonymous'}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div className="view-all-link">
+                  <button
+                    className="link-button"
+                    onClick={() => navigate('/dashboard/freelancer/active-projects')}
+                  >
+                    View all active projects <i className="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </CardContent>
+            )}
           </Card>
         </div>
 

@@ -7,7 +7,17 @@ import ProfileImageUploader from './ProfileImageUploader';
 import './Profile.css';
 
 const Profile = () => {
-  const { user, loading, error, clientProfile, freelancerProfile, updateClientProfile, updateFreelancerProfile } = useAuth();
+  const { 
+    user, 
+    loading, 
+    error, 
+    clientProfile, 
+    freelancerProfile, 
+    adminProfile, 
+    updateClientProfile, 
+    updateFreelancerProfile,
+    updateAdminProfile 
+  } = useAuth();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -51,8 +61,22 @@ const Profile = () => {
         setImagePreview(null);
       }
       setRemoveImage(false);
+    } else if (user.role === 'admin' && adminProfile) {
+      setFormData({
+        companyName: adminProfile.companyName || '',
+        title: adminProfile.title || '',
+        skills: adminProfile.skills || '',
+        bio: adminProfile.bio || '',
+        profileImage: null,
+      });
+      if (adminProfile.profileImage) {
+        setImagePreview(getFullImageUrl(adminProfile.profileImage));
+      } else {
+        setImagePreview(null);
+      }
+      setRemoveImage(false);
     }
-  }, [user, clientProfile, freelancerProfile]);
+  }, [user, clientProfile, freelancerProfile, adminProfile]);
 
   useEffect(() => {
     loadProfile();
@@ -90,6 +114,9 @@ const Profile = () => {
         dataToSend.append('title', formData.title);
       } else if (user.role === 'freelancer') {
         dataToSend.append('skills', formData.skills);
+      } else if (user.role === 'admin') {
+        // For admin, we can add any fields that admin profiles support
+        dataToSend.append('title', formData.title);
       }
   
       if (formData.profileImage) {
@@ -103,8 +130,10 @@ const Profile = () => {
   
       if (user.role === 'client') {
         await updateClientProfile(dataToSend);
-      } else {
+      } else if (user.role === 'freelancer') {
         await updateFreelancerProfile(dataToSend);
+      } else if (user.role === 'admin') {
+        await updateAdminProfile(dataToSend);
       }
   
       setSuccess('Profile updated successfully!');
@@ -124,21 +153,37 @@ const Profile = () => {
       setIsSubmitting(false);
     }
   };
-  
-
 
   if (!user) return <div className="profile-container">Loading profile...</div>;
+
+  const getProfileTitle = () => {
+    switch (user.role) {
+      case 'client': return 'Client Profile';
+      case 'freelancer': return 'Freelancer Profile';
+      case 'admin': return 'Admin Profile';
+      default: return 'User Profile';
+    }
+  };
+
+  const getProfileDescription = () => {
+    switch (user.role) {
+      case 'client': 
+        return 'Manage your client information and company details';
+      case 'freelancer': 
+        return 'Showcase your skills and expertise to potential clients';
+      case 'admin': 
+        return 'Manage your admin profile and platform appearance';
+      default: 
+        return 'Update your personal information';
+    }
+  };
 
   return (
     <div className="profile-container">
       <Card className="profile-card">
         <CardHeader>
-          <CardTitle>{user.role === 'client' ? 'Client Profile' : 'Freelancer Profile'}</CardTitle>
-          <CardDescription>
-            {user.role === 'client' 
-              ? 'Manage your client information and company details' 
-              : 'Showcase your skills and expertise to potential clients'}
-          </CardDescription>
+          <CardTitle>{getProfileTitle()}</CardTitle>
+          <CardDescription>{getProfileDescription()}</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -199,6 +244,19 @@ const Profile = () => {
                   />
                 </div>
               )}
+              
+              {user.role === 'admin' && (
+                <div className="form-group">
+                  <label htmlFor="title" className="form-label">Title/Position</label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleFormChange}
+                    placeholder="Your position or title"
+                  />
+                </div>
+              )}
 
               <div className="form-group">
                 <label htmlFor="bio" className="form-label">Bio</label>
@@ -208,7 +266,11 @@ const Profile = () => {
                   className="textarea-input"
                   value={formData.bio}
                   onChange={handleFormChange}
-                  placeholder={user.role === 'client' ? "Tell us about your company or project needs" : "Tell clients about your experience and expertise"}
+                  placeholder={
+                    user.role === 'client' ? "Tell us about your company or project needs" : 
+                    user.role === 'freelancer' ? "Tell clients about your experience and expertise" :
+                    "Share information about your role and experience"
+                  }
                   rows="4"
                 />
               </div>

@@ -9,19 +9,18 @@ import Register from './components/auth/Register';
 import Profile from './components/auth/Profile';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Dashboard from './components/dashboard/Dashboard';
-import ClientDashboard from './components/dashboard/ClientDashboard';
-import FreelancerDashboard from './components/dashboard/FreelancerDashboard';
-import Wallet from './components/dashboard/Wallet';
-import Chat from './components/dashboard/Chat';
+import Wallet from './components/dashboard/wallet/Wallet';
+import Chat from './components/dashboard/chat/Chat';
 import AccountSettings from './components/dashboard/AccountSettings';
-import PostJob from './components/dashboard/PostJob';
-import Proposals from './components/dashboard/Proposals';
+import PostJob from './components/dashboard/jobs/PostJob';
+import Proposals from './components/dashboard/jobs/Proposals';
 import ActiveProjects from './components/dashboard/ActiveProjects';
-import ProposalReview from './components/dashboard/ProposalReview';
-import ManageJobs from './components/dashboard/ManageJobs';
-import EditJob from './components/dashboard/EditJob';
-import Jobs from './components/Jobs';
-import JobDetails from './components/jobs/JobDetails';
+import ProposalReview from './components/dashboard/jobs/ProposalReview';
+import ManageJobs from './components/dashboard/jobs/ManageJobs';
+import Jobs from './components/dashboard/jobs/Jobs';
+import JobDetails from './components/dashboard/jobs/JobDetails';
+import EditJob from './components/dashboard/jobs/EditJob';
+import UserManagement from './components/dashboard/admin/UserManagement';
 import { Button } from './components/ui/button';
 import './App.css';
 
@@ -73,6 +72,19 @@ function App() {
               <Route path="chat" element={<Chat />} />
               <Route path="settings" element={<AccountSettings />} />
               
+              {/* Admin-specific dashboard features */}
+              <Route path="users" element={
+                <ProtectedRoute>
+                  {({ user }) => (
+                    user.role === 'admin' ? (
+                      <UserManagement />
+                    ) : (
+                      <Navigate to={`/dashboard/${user.role}`} replace />
+                    )
+                  )}
+                </ProtectedRoute>
+              } />
+              
               {/* Client-specific dashboard features */}
               <Route path="active-projects" element={<ActiveProjects />} />
               <Route path="projects" element={<ActiveProjects />} />
@@ -91,7 +103,7 @@ function App() {
               <Route path="proposals/:jobId" element={
                 <ProtectedRoute>
                   {({ user }) => (
-                    user.role === 'client' ? (
+                    user.role === 'client' || user.role === 'admin' ? (
                       <ProposalReview />
                     ) : (
                       <Navigate to="/dashboard/freelancer/proposals" replace />
@@ -99,32 +111,50 @@ function App() {
                   )}
                 </ProtectedRoute>
               } />
-              <Route path="post-job" element={<PostJob />} />
+              <Route path="post-job" element={
+                <ProtectedRoute>
+                  {({ user }) => (
+                    user.role === 'client' ? (
+                      <PostJob />
+                    ) : (
+                      <Navigate to={`/dashboard/${user.role}`} replace />
+                    )
+                  )}
+                </ProtectedRoute>
+              } />
               <Route 
                 path="hire" 
                 element={
-                  <div className="dashboard-section">
-                    <h2 className="dashboard-section-title">Post a Job</h2>
-                    <p>Create a new job to find talented freelancers for your project.</p>
-                    <div className="action-buttons" style={{ marginTop: "1.5rem" }}>
-                      <Button 
-                        onClick={() => window.location.href = '/dashboard/client/post-job'}
-                        style={{
-                          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                          padding: '0.75rem 1.5rem',
-                          borderRadius: '0.5rem',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          fontWeight: '600',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                          transition: 'all 0.3s ease',
-                        }}
-                      >
-                        <i className="fas fa-plus-circle"></i> Create New Job Post
-                      </Button>
-                    </div>
-                  </div>
+                  <ProtectedRoute>
+                    {({ user }) => (
+                      user.role === 'client' ? (
+                        <div className="dashboard-section">
+                          <h2 className="dashboard-section-title">Post a Job</h2>
+                          <p>Create a new job to find talented freelancers for your project.</p>
+                          <div className="action-buttons" style={{ marginTop: "1.5rem" }}>
+                            <Button 
+                              onClick={() => window.location.href = '/dashboard/client/post-job'}
+                              style={{
+                                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '0.5rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontWeight: '600',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                transition: 'all 0.3s ease',
+                              }}
+                            >
+                              <i className="fas fa-plus-circle"></i> Create New Job Post
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Navigate to={`/dashboard/${user.role}`} replace />
+                      )
+                    )}
+                  </ProtectedRoute>
                 } 
               />
               <Route
@@ -134,6 +164,8 @@ function App() {
                     {({ user }) => (
                       user.role === 'client' ? (
                         <ManageJobs />
+                      ) : user.role === 'admin' ? (
+                        <ManageJobs isAdmin={true} />
                       ) : (
                         <div className="dashboard-section">
                           <h2 className="dashboard-section-title">Available Jobs</h2>
@@ -147,6 +179,37 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="edit-job/:jobId" element={
+                <ProtectedRoute>
+                  {({ user }) => (
+                    user.role === 'client' || user.role === 'admin' ? (
+                      <EditJob />
+                    ) : (
+                      <Navigate to="/dashboard/freelancer/jobs" replace />
+                    )
+                  )}
+                </ProtectedRoute>
+              } />
+              
+              {/* Admin-specific routes for reports */}
+              <Route path="reports" element={
+                <ProtectedRoute>
+                  {({ user }) => (
+                    user.role === 'admin' ? (
+                      <div className="dashboard-section">
+                        <h2 className="dashboard-section-title">Reports Management</h2>
+                        <p>Manage user and content reports.</p>
+                        <div className="empty-state" style={{ marginTop: '2rem' }}>
+                          <i className="fas fa-flag"></i>
+                          <p>No reports to review at this time.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <Navigate to={`/dashboard/${user.role}`} replace />
+                    )
+                  )}
+                </ProtectedRoute>
+              } />
             </Route>
             
             <Route path="/contact" element={<Contact />} />

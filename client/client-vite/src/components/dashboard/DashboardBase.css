@@ -557,6 +557,88 @@ body {
   margin-bottom: 1rem;
 }
 
+/* Add styles for recent jobs list */
+.recent-jobs-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-job-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.recent-job-item:last-child {
+  border-bottom: none;
+}
+
+.recent-job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.recent-job-header .job-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  cursor: pointer;
+}
+
+.recent-job-header .job-title:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.job-status-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.job-status-badge.status-in-progress {
+  background-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.job-status-badge.status-active {
+  background-color: #a7f3d0;
+  color: #065f46;
+}
+
+.job-status-badge.status-ongoing {
+  background-color: #bae6fd;
+  color: #0369a1;
+}
+
+.job-status-badge.status-completion-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+  animation: pulse 2s infinite;
+}
+
+.recent-job-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.job-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+}
+
+.job-detail i {
+  color: #6d6ae5;
+}
+
 /* Responsive Adaptations for smaller screens */
 @media (max-width: 768px) {
   .dashboard-stats-grid {

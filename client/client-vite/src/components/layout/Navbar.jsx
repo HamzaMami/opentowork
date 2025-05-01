@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import './Navbar.css';
 
 function Navbar() {
-  const { user, logout, clientProfile, freelancerProfile } = useAuth();
+  const { user, logout, clientProfile, freelancerProfile, adminProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -24,6 +24,17 @@ function Navbar() {
   
   const getProfileImage = () => {
     if (!user) return null;
+    
+    // Handle profile image for admin role
+    if (user.role === 'admin') {
+      if (!adminProfile?.profileImage) return null;
+      
+      return adminProfile.profileImage.startsWith('http') 
+        ? adminProfile.profileImage 
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${adminProfile.profileImage}`;
+    }
+    
+    // Handle client and freelancer profiles
     const profile = user.role === 'client' ? clientProfile : freelancerProfile;
     if (!profile?.profileImage) return null;
 
@@ -87,6 +98,11 @@ function Navbar() {
                   <i className="fas fa-search navbar-icon"></i> Find Work
                 </Link>
               )}
+              {user && user.role === 'admin' && (
+                <Link to="/dashboard/admin/users" className={`navbar-link ${isActive('/dashboard/admin/users')}`}>
+                  <i className="fas fa-users navbar-icon"></i> Manage Users
+                </Link>
+              )}
               <Link to="/about" className={`navbar-link ${isActive('/about')}`}>
                 About
               </Link>
@@ -129,41 +145,73 @@ function Navbar() {
                           className="navbar-dropdown"
                           onMouseEnter={handleMouseEnter}
                           onMouseLeave={handleMouseLeave}
-                          style={{ left: '0px' }} // Position it directly below the user section
                         >
                           <Link to={`/dashboard/${user.role}`} className="dropdown-item">
                             <i className="dropdown-icon fas fa-tachometer-alt"></i>
                             Dashboard
                           </Link>
-                          <Link to="/profile" className="dropdown-item">
-                            <i className="dropdown-icon fas fa-user"></i>
-                            Profile
-                          </Link>
+                          
+                          {/* Profile link - not relevant for admin users */}
+                          {user.role !== 'admin' && (
+                            <Link to="/profile" className="dropdown-item">
+                              <i className="dropdown-icon fas fa-user"></i>
+                              Profile
+                            </Link>
+                          )}
+                          
+                          {/* Role-specific menu items */}
                           {user.role === 'client' && (
                             <Link to={`/dashboard/${user.role}/hire`} className="dropdown-item">
                               <i className="dropdown-icon fas fa-plus-circle"></i>
                               Post a Job
                             </Link>
                           )}
+                          
                           {user.role === 'freelancer' && (
                             <Link to={`/dashboard/${user.role}/jobs`} className="dropdown-item">
                               <i className="dropdown-icon fas fa-briefcase"></i>
                               Find Work
                             </Link>
                           )}
-                          <Link to={`/dashboard/${user.role}/wallet`} className="dropdown-item">
-                            <i className="dropdown-icon fas fa-wallet"></i>
-                            Wallet
-                          </Link>
+                          
+                          {/* Admin-specific menu items */}
+                          {user.role === 'admin' && (
+                            <>
+                              <Link to={`/dashboard/${user.role}/users`} className="dropdown-item">
+                                <i className="dropdown-icon fas fa-users"></i>
+                                Manage Users
+                              </Link>
+                              <Link to={`/dashboard/${user.role}/jobs`} className="dropdown-item">
+                                <i className="dropdown-icon fas fa-briefcase"></i>
+                                Manage Jobs
+                              </Link>
+                              <Link to={`/dashboard/${user.role}/reports`} className="dropdown-item">
+                                <i className="dropdown-icon fas fa-flag"></i>
+                                Reports
+                              </Link>
+                            </>
+                          )}
+                          
+                          {/* Common menu items for all user types */}
+                          {user.role !== 'admin' && (
+                            <Link to={`/dashboard/${user.role}/wallet`} className="dropdown-item">
+                              <i className="dropdown-icon fas fa-wallet"></i>
+                              Wallet
+                            </Link>
+                          )}
+                          
                           <Link to={`/dashboard/${user.role}/chat`} className="dropdown-item">
                             <i className="dropdown-icon fas fa-comments"></i>
                             Messages
                           </Link>
+                          
                           <Link to={`/dashboard/${user.role}/settings`} className="dropdown-item">
                             <i className="dropdown-icon fas fa-cog"></i>
                             Account Settings
                           </Link>
+                          
                           <div className="dropdown-divider"></div>
+                          
                           <button onClick={handleLogout} className="dropdown-item dropdown-item-danger">
                             <i className="dropdown-icon fas fa-sign-out-alt"></i>
                             Logout

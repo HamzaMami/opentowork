@@ -1,0 +1,122 @@
+/* Job Form Styles */
+.edit-job-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.625rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: #dc2626;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.budget-error {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-button {
+  background-color: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.cancel-button:hover {
+  background-color: #f3f4f6;
+}
+
+.save-button {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.save-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.success-message {
+  background-color: #ecfdf5;
+  color: #065f46;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.edit-job-loading,
+.edit-job-error {
+  text-align: center;
+  padding: 2rem;
+}
+
+.edit-job-loading .spinner {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3px solid #2563eb;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

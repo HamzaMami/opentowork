@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ClientDashboard from './ClientDashboard';
-import FreelancerDashboard from './FreelancerDashboard';
+import FreelancerDashboard from './jobs/FreelancerDashboard';
+import AdminDashboard from './admin/AdminDashboard';
 import './DashboardBase.css';
 
 const Dashboard = () => {
@@ -12,7 +13,7 @@ const Dashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Redirect if user is not authenticated or role doesn't match the URL parameter
-  if (!user || (role !== 'client' && role !== 'freelancer') || user.role !== role) {
+  if (!user || (role !== 'client' && role !== 'freelancer' && role !== 'admin') || user.role !== role) {
     navigate('/login');
     return null;
   }
@@ -44,21 +45,69 @@ const Dashboard = () => {
             <span>Overview</span>
           </NavLink>
           
-          <NavLink 
-            to={`/dashboard/${role}/wallet`} 
-            className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
-          >
-            <i className="fas fa-wallet sidebar-icon"></i>
-            <span>Wallet</span>
-          </NavLink>
-          
-          <NavLink 
-            to={`/dashboard/${role}/chat`} 
-            className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
-          >
-            <i className="fas fa-comments sidebar-icon"></i>
-            <span>Messages</span>
-          </NavLink>
+          {role === 'admin' ? (
+            <>
+              <NavLink 
+                to={`/dashboard/${role}/users`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-users sidebar-icon"></i>
+                <span>Manage Users</span>
+              </NavLink>
+              
+              <NavLink 
+                to={`/dashboard/${role}/jobs`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-briefcase sidebar-icon"></i>
+                <span>Manage Jobs</span>
+              </NavLink>
+              
+              <NavLink 
+                to={`/dashboard/${role}/reports`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-flag sidebar-icon"></i>
+                <span>Reports</span>
+              </NavLink>
+              
+              {/* Added chat section for admin */}
+              <NavLink 
+                to={`/dashboard/${role}/chat`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-comments sidebar-icon"></i>
+                <span>Support Chat</span>
+              </NavLink>
+              
+              {/* Added profile section for admin */}
+              <NavLink 
+                to="/profile" 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-user-circle sidebar-icon"></i>
+                <span>Profile</span>
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink 
+                to={`/dashboard/${role}/wallet`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-wallet sidebar-icon"></i>
+                <span>Wallet</span>
+              </NavLink>
+              
+              <NavLink 
+                to={`/dashboard/${role}/chat`} 
+                className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+              >
+                <i className="fas fa-comments sidebar-icon"></i>
+                <span>Messages</span>
+              </NavLink>
+            </>
+          )}
 
           {role === 'client' && (
             <>
@@ -148,7 +197,9 @@ const Dashboard = () => {
 
         <main className="dashboard-main">
           {isIndexRoute ? (
-            role === 'client' ? <ClientDashboard /> : <FreelancerDashboard />
+            role === 'client' ? <ClientDashboard /> : 
+            role === 'freelancer' ? <FreelancerDashboard /> :
+            <AdminDashboard />
           ) : (
             <Outlet />
           )}

@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { jobsAPI } from '../../api';
-import './PostJob.css'; // Reuse the PostJob styles
+import { useState, } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { jobsAPI } from '../../../api';
+import './PostJob.css';
 
 const JOB_CATEGORIES = [
   'Web Development',
@@ -25,10 +25,8 @@ const SKILL_LEVELS = [
   'Expert'
 ];
 
-const EditJob = () => {
+const PostJob = () => {
   const navigate = useNavigate();
-  const { jobId } = useParams();
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -47,51 +45,6 @@ const EditJob = () => {
     duration: '',
     experienceLevel: 'Intermediate'
   });
-
-  useEffect(() => {
-    const fetchJobDetails = async () => {
-      setIsLoading(true);
-      try {
-        const response = await jobsAPI.getJobById(jobId);
-        if (response.data.success) {
-          const job = response.data.data;
-          
-          // Only allow editing if the job is in 'open' status
-          if (job.status !== 'open') {
-            setError('This job cannot be edited because it is not in "open" status.');
-            return;
-          }
-          
-          // Format the job data for the form
-          setFormData({
-            title: job.title || '',
-            description: job.description || '',
-            category: job.category || '',
-            skills: job.skills && job.skills.length ? job.skills : [''],
-            budget: {
-              min: job.budget?.min || '',
-              max: job.budget?.max || '',
-              type: job.budget?.type || 'fixed'
-            },
-            location: job.location || 'Remote',
-            duration: job.duration || '',
-            experienceLevel: job.experienceLevel || 'Intermediate'
-          });
-        } else {
-          setError('Failed to fetch job details');
-        }
-      } catch (err) {
-        console.error('Error fetching job details:', err);
-        setError(err.response?.data?.message || 'An error occurred while fetching job details');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (jobId) {
-      fetchJobDetails();
-    }
-  }, [jobId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -195,52 +148,42 @@ const EditJob = () => {
         skills: filteredSkills
       };
       
-      await jobsAPI.updateJob(jobId, jobData);
+      await jobsAPI.createJob(jobData);
       setSuccess(true);
+      
+      // Reset form after successful submission
+      setFormData({
+        title: '',
+        description: '',
+        category: '',
+        skills: [''],
+        budget: {
+          min: '',
+          max: '',
+          type: 'fixed'
+        },
+        location: 'Remote',
+        duration: '',
+        experienceLevel: 'Intermediate'
+      });
       
       // Redirect to manage jobs page after a short delay
       setTimeout(() => {
         navigate('/dashboard/client/jobs');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update job. Please try again.');
-      console.error('Job update error:', err);
+      setError(err.response?.data?.message || 'Failed to post job. Please try again.');
+      console.error('Job posting error:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="post-job-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading job details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !formData.title) {
-    return (
-      <div className="post-job-container">
-        <div className="error-state">
-          <i className="fas fa-exclamation-circle"></i>
-          <h3>Error</h3>
-          <p>{error}</p>
-          <Button onClick={() => navigate('/dashboard/client/jobs')}>
-            Back to My Jobs
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="post-job-container">
       <div className="post-job-header">
-        <h1>Edit Job Posting</h1>
-        <p>Update your job posting to attract the best talent for your project</p>
+        <h1>Post a New Job</h1>
+        <p>Create a detailed job posting to find the perfect talent for your project</p>
       </div>
       
       {error && (
@@ -251,7 +194,7 @@ const EditJob = () => {
       
       {success && (
         <div className="success-message">
-          <i className="fas fa-check-circle"></i> Job updated successfully! Redirecting to your jobs...
+          <i className="fas fa-check-circle"></i> Job posted successfully! Redirecting to your jobs...
         </div>
       )}
       
@@ -470,10 +413,10 @@ const EditJob = () => {
           >
             {isSubmitting ? (
               <>
-                <i className="fas fa-spinner fa-spin"></i> Updating Job...
+                <i className="fas fa-spinner fa-spin"></i> Posting Job...
               </>
             ) : (
-              'Update Job'
+              'Post Job'
             )}
           </Button>
           
@@ -491,4 +434,4 @@ const EditJob = () => {
   );
 };
 
-export default EditJob;
+export default PostJob;

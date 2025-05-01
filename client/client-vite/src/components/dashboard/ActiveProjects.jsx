@@ -22,6 +22,10 @@ const ActiveProjects = () => {
   const [hoverPosition, setHoverPosition] = useState(null);
   const [hoverIsVisible, setHoverIsVisible] = useState(false);
 
+  // Add state to track completion confirmation process
+  // eslint-disable-next-line no-unused-vars
+  const [confirmingCompletion, setConfirmingCompletion] = useState(null);
+
   // Add this function to prevent unnecessary re-renders
   const handleProfileEnter = (userData, e) => {
     // Prevent handling if we're already showing this user's profile
@@ -237,10 +241,11 @@ const ActiveProjects = () => {
                 return false;
               }
               
-              // Check job status
+              // Check job status - explicitly include completion-pending
               const isActiveStatus = job.status === 'in-progress' || 
                                     job.status === 'active' || 
-                                    job.status === 'ongoing';
+                                    job.status === 'ongoing' ||
+                                    job.status === 'completion-pending';
               
               // Check if the freelancer is assigned to this job
               const isAssigned = job.assignedFreelancer && 
@@ -325,23 +330,165 @@ const ActiveProjects = () => {
     });
   };
 
-  const handleMarkCompleted = async (jobId) => {
+  // Get display status with enhanced handling for completion-pending state
+  const getDisplayStatus = (status, completionStatus = {}) => {
+    switch (status) {
+      case 'in-progress':
+        return 'In Progress';
+      case 'active':
+        return 'Active';
+      case 'ongoing':
+        return 'Ongoing';
+      case 'completion-pending':
+        // Show more detailed status for completion-pending
+        // eslint-disable-next-line no-case-declarations
+        const { clientConfirmed, freelancerConfirmed } = completionStatus || {};
+        if (clientConfirmed && freelancerConfirmed) {
+          return 'Completion Confirmed';
+        } else if (clientConfirmed) {
+          return 'Awaiting Freelancer Confirmation';
+        } else if (freelancerConfirmed) {
+          return 'Awaiting Client Confirmation';
+        } else {
+          return 'Completion Pending';
+        }
+      default:
+        return 'In Progress';
+    }
+  };
+
+  // Get status badge class with enhanced handling for completion-pending state
+  const getStatusBadgeClass = (status, completionStatus = {}) => {
+    switch (status) {
+      case 'in-progress':
+        return 'status-in-progress';
+      case 'active':
+        return 'status-active';
+      case 'ongoing':
+        return 'status-ongoing';
+      case 'completion-pending':
+        // Different badge styling based on confirmation state
+        // eslint-disable-next-line no-case-declarations
+        const { clientConfirmed, freelancerConfirmed } = completionStatus || {};
+        if (clientConfirmed && freelancerConfirmed) {
+          return 'status-completion-confirmed';
+        } else {
+          return 'status-completion-pending';
+        }
+      default:
+        return 'status-in-progress';
+    }
+  };
+
+  // Handle client initiating project completion
+  const handleClientMarkCompleted = async (jobId) => {
     try {
-      const confirmed = window.confirm("Are you sure you want to mark this project as completed?");
+      const confirmed = window.confirm(
+        "Are you sure you want to mark this project as complete? The freelancer will need to confirm completion before the project is finalized."
+      );
+      
       if (!confirmed) return;
       
-      const response = await jobsAPI.updateJobStatus(jobId, { status: 'completed' });
+      setConfirmingCompletion(jobId);
+      
+      const response = await jobsAPI.confirmJobCompletion(jobId);
+      
       if (response.data.success) {
-        // Update UI to reflect the change
+        // Update the project in the UI to show completion pending
         setActiveProjects(prevProjects => 
-          prevProjects.filter(project => project._id !== jobId)
+          prevProjects.map(project => 
+            project._id === jobId 
+              ? { 
+                  ...project, 
+                  status: 'completion-pending',
+                  completionStatus: {
+                    ...project.completionStatus,
+                    clientConfirmed: true,
+                    clientConfirmedAt: new Date()
+                  }
+                }
+              : project
+          )
         );
+        
+        // Show success message
+        alert('Project marked for completion. Waiting for freelancer confirmation.');
       } else {
         alert('Failed to mark project as completed');
       }
     } catch (err) {
       console.error('Error marking project as completed:', err);
       alert(err.response?.data?.message || 'An error occurred while updating the project');
+    } finally {
+      setConfirmingCompletion(null);
+    }
+  };
+  
+  // Handle freelancer confirming project completion
+  const handleFreelancerConfirmCompletion = async (jobId) => {
+    try {
+      const confirmed = window.confirm(
+        "Are you sure you want to confirm this project's completion? This will finalize the project."
+      );
+      
+      if (!confirmed) return;
+      
+      setConfirmingCompletion(jobId);
+      
+      const response = await jobsAPI.confirmJobCompletion(jobId);
+      
+      if (response.data.success) {
+        // Check if project is now fully completed or still waiting for client
+        const isCompleted = response.data.data.status === 'completed';
+        
+        if (isCompleted) {
+          // If project is completed, remove from active projects
+          setActiveProjects(prevProjects => 
+            prevProjects.filter(project => project._id !== jobId)
+          );
+          
+          // Show success message
+          alert('Project completion confirmed. The project is now completed.');
+        } else {
+          // Update the project in the UI to show pending client confirmation
+          setActiveProjects(prevProjects => 
+            prevProjects.map(project => 
+              project._id === jobId 
+                ? { 
+                    ...project, 
+                    status: 'completion-pending',
+                    completionStatus: {
+                      ...project.completionStatus,
+                      freelancerConfirmed: true,
+                      freelancerConfirmedAt: new Date()
+                    }
+                  }
+                : project
+            )
+          );
+          
+          // Show message
+          alert('Your completion confirmation has been recorded. Waiting for client to confirm.');
+        }
+      } else {
+        alert('Failed to confirm project completion');
+      }
+    } catch (err) {
+      console.error('Error confirming project completion:', err);
+      alert(err.response?.data?.message || 'An error occurred while updating the project');
+    } finally {
+      setConfirmingCompletion(null);
+    }
+  };
+  
+  // Update the original handleMarkCompleted to use our new functions
+  // eslint-disable-next-line no-unused-vars
+  const handleMarkCompleted = (jobId, completionStatus) => {
+    // Redirect based on user role
+    if (userRole === 'client') {
+      handleClientMarkCompleted(jobId);
+    } else if (userRole === 'freelancer') {
+      handleFreelancerConfirmCompletion(jobId);
     }
   };
 
@@ -373,32 +520,6 @@ const ActiveProjects = () => {
     
     const progress = Math.min(100, Math.round((diffDays / totalDuration) * 100));
     return progress;
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'in-progress':
-        return 'status-in-progress';
-      case 'active':
-        return 'status-active';
-      case 'ongoing':
-        return 'status-ongoing';
-      default:
-        return 'status-in-progress';
-    }
-  };
-
-  const getDisplayStatus = (status) => {
-    switch (status) {
-      case 'in-progress':
-        return 'In Progress';
-      case 'active':
-        return 'Active';
-      case 'ongoing':
-        return 'Ongoing';
-      default:
-        return 'In Progress';
-    }
   };
 
   const handleFilterChange = (newFilter) => {
@@ -504,8 +625,8 @@ const ActiveProjects = () => {
             <CardContent>
               <div className="project-header">
                 <h3>{project.title}</h3>
-                <span className={`project-status ${getStatusBadgeClass(project.status)}`}>
-                  {getDisplayStatus(project.status)}
+                <span className={`project-status ${getStatusBadgeClass(project.status, project.completionStatus)}`}>
+                  {getDisplayStatus(project.status, project.completionStatus)}
                 </span>
               </div>
               
@@ -660,9 +781,18 @@ const ActiveProjects = () => {
                 {userRole === 'client' && (
                   <Button 
                     className="complete-btn"
-                    onClick={() => handleMarkCompleted(project._id)}
+                    onClick={() => handleMarkCompleted(project._id, project.completionStatus)}
                   >
                     <i className="fas fa-check-circle"></i> Mark Completed
+                  </Button>
+                )}
+
+                {userRole === 'freelancer' && project.status === 'completion-pending' && (
+                  <Button 
+                    className="confirm-completion-btn"
+                    onClick={() => handleMarkCompleted(project._id, project.completionStatus)}
+                  >
+                    <i className="fas fa-check-circle"></i> Confirm Completion
                   </Button>
                 )}
               </div>

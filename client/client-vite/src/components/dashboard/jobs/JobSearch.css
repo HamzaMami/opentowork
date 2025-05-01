@@ -1,0 +1,63 @@
+/* Job Search Styles */
+.jobs-search-section {
+  margin-bottom: 2rem;
+}
+
+.jobs-search-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-input-container {
+  display: flex;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: white;
+  border: 2px solid #e0e7ff;
+  height: 60px;
+  align-items: stretch;
+  font-size: 0;
+}
+
+.jobs-search-input {
+  flex-grow: 1;
+  border: none;
+  border-radius: 10px 0 0 10px;
+  padding: 0 1.5rem;
+  font-size: 1.1rem;
+  color: #374151;
+  background-color: white;
+  outline: none;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+.jobs-search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 0 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 0 10px 10px 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  gap: 0.5rem;
+  margin: 0;
+  vertical-align: middle;
+}
+
+.jobs-search-button:hover {
+  background: linear-gradient(135deg, #4338ca, #1d4ed8);
+  transform: translateY(-2px);
+}

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { walletAPI } from '../../api';
-import './DashboardBase.css';
+import { useAuth } from '../../../context/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { walletAPI } from '../../../api';
+import '../DashboardBase.css';
 import './WalletComponents.css';
 
 const Wallet = () => {

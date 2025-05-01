@@ -1,0 +1,79 @@
+/* Import modular CSS files */
+@import './JobSearch.css';
+@import './JobList.css';
+@import './JobFilters.css';
+@import './JobForm.css';
+@import './JobResponsive.css';
+
+/* Base Container Styles */
+.jobs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.jobs-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.jobs-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.jobs-subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+/* Main Content Layout */
+.jobs-main-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 1rem 0;
+  gap: 1rem;
+}
+
+.pagination-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #f8fafc;
+  color: #2563eb;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-button:hover {
+  background-color: #e0e7ff;
+  border-color: #c7d2fe;
+}
+
+.pagination-button:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: #64748b;
+}

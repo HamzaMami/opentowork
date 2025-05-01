@@ -48,13 +48,24 @@ const ChatAvatar = memo(({ user, onMouseEnter, onMouseLeave }) => {
   return (
     <div 
       className="chat-avatar"
-      onMouseEnter={onMouseEnter ? (e) => onMouseEnter(user._id, e) : undefined}
-      onMouseLeave={onMouseLeave}
+      data-user-id={user._id} // Add data attribute for event delegation
+      onMouseEnter={e => {
+        // Ensure event always has the user ID
+        if (onMouseEnter && user && user._id) {
+          onMouseEnter(user._id, e);
+        }
+      }}
+      onMouseLeave={() => {
+        if (onMouseLeave) {
+          onMouseLeave();
+        }
+      }}
     >
       {profileImage && !error ? (
         <img 
           src={getImageUrl(profileImage)} 
           alt={user.name || 'User'} 
+          data-user-id={user._id} // Add data attribute to image as well
           loading="lazy"
           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
           onError={() => {
@@ -63,7 +74,10 @@ const ChatAvatar = memo(({ user, onMouseEnter, onMouseLeave }) => {
           }}
         />
       ) : (
-        <div className="chat-avatar-placeholder">
+        <div 
+          className="chat-avatar-placeholder"
+          data-user-id={user._id} // Add data attribute to placeholder
+        >
           {user.name ? user.name.charAt(0).toUpperCase() : '?'}
         </div>
       )}

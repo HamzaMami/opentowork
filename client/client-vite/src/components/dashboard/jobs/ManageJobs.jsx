@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jobsAPI } from '../../api';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/button';
+import { jobsAPI } from '../../../api';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { useAuth } from '../../../context/AuthContext';
 import './ManageJobs.css';
 
-const ManageJobs = () => {
+const ManageJobs = ({ isAdmin = false }) => {
   const navigate = useNavigate();
+  // eslint-disable-next-line no-unused-vars
+  const { user } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -18,21 +21,26 @@ const ManageJobs = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   const fetchJobs = async () => {
     setIsLoading(true);
     setError('');
     
     try {
-      const response = await jobsAPI.getClientJobs();
-      if (response.data.success) {
-        setJobs(response.data.data);
+      // Use different API calls for admin vs client
+      const response = isAdmin 
+        ? await jobsAPI.getJobs() // Get all jobs for admin
+        : await jobsAPI.getClientJobs(); // Get only client's jobs
+        
+      if (response.data.success || response.data.data) {
+        setJobs(response.data.data || []);
       } else {
         setError('Failed to fetch jobs');
       }
     } catch (err) {
-      console.error('Error fetching client jobs:', err);
+      console.error(`Error fetching ${isAdmin ? 'all' : 'client'} jobs:`, err);
       setError(err.response?.data?.message || 'An error occurred while fetching jobs');
     } finally {
       setIsLoading(false);
@@ -68,11 +76,19 @@ const ManageJobs = () => {
   };
 
   const handleEditJob = (jobId) => {
-    navigate(`/dashboard/client/edit-job/${jobId}`);
+    if (isAdmin) {
+      navigate(`/dashboard/admin/edit-job/${jobId}`);
+    } else {
+      navigate(`/dashboard/client/edit-job/${jobId}`);
+    }
   };
 
   const handleViewProposals = (jobId) => {
-    navigate(`/dashboard/client/proposals/${jobId}`);
+    if (isAdmin) {
+      navigate(`/dashboard/admin/proposals/${jobId}`);
+    } else {
+      navigate(`/dashboard/client/proposals/${jobId}`);
+    }
   };
   
   const handleViewJobDetails = (jobId) => {
@@ -127,13 +143,15 @@ const ManageJobs = () => {
   return (
     <div className="manage-jobs-container">
       <div className="manage-jobs-header">
-        <h1>Manage Your Jobs</h1>
-        <Button 
-          onClick={() => navigate('/dashboard/client/post-job')}
-          className="post-job-button"
-        >
-          <i className="fas fa-plus-circle"></i> Post New Job
-        </Button>
+        <h1>{isAdmin ? 'Manage Platform Jobs' : 'Manage Your Jobs'}</h1>
+        {!isAdmin && (
+          <Button 
+            onClick={() => navigate('/dashboard/client/post-job')}
+            className="post-job-button"
+          >
+            <i className="fas fa-plus-circle"></i> Post New Job
+          </Button>
+        )}
       </div>
       
       {error && (
@@ -179,7 +197,7 @@ const ManageJobs = () => {
       {isLoading ? (
         <div className="jobs-loading">
           <div className="loading-spinner"></div>
-          <p>Loading your jobs...</p>
+          <p>Loading {isAdmin ? 'all' : 'your'} jobs...</p>
         </div>
       ) : filteredJobs.length === 0 ? (
         <Card className="no-jobs-card">
@@ -189,10 +207,12 @@ const ManageJobs = () => {
               <h3>No jobs found</h3>
               <p>
                 {activeTab === 'all'
-                  ? "You haven't posted any jobs yet. Post a job to start hiring freelancers."
-                  : `You don't have any ${activeTab} jobs.`}
+                  ? isAdmin 
+                    ? "There are no jobs in the system currently."
+                    : "You haven't posted any jobs yet. Post a job to start hiring freelancers."
+                  : `No ${activeTab} jobs found.`}
               </p>
-              {activeTab === 'all' && (
+              {activeTab === 'all' && !isAdmin && (
                 <Button
                   onClick={() => navigate('/dashboard/client/post-job')}
                   className="post-job-button"
@@ -221,6 +241,13 @@ const ManageJobs = () => {
                     </span>
                   </div>
                 </div>
+                
+                {isAdmin && job.client && (
+                  <div className="job-client-info">
+                    <i className="fas fa-user"></i>
+                    <span>Posted by: {job.client.name || 'Unknown Client'}</span>
+                  </div>
+                )}
                 
                 <div className="job-meta">
                   <div className="job-meta-item">
@@ -257,7 +284,7 @@ const ManageJobs = () => {
                     <i className="fas fa-file-alt"></i> View Proposals
                   </Button>
                   
-                  {job.status === 'open' && (
+                  {job.status === 'open' && !isAdmin && (
                     <>
                       <Button 
                         onClick={() => handleEditJob(job._id)}
@@ -276,6 +303,15 @@ const ManageJobs = () => {
                         <i className="fas fa-times-circle"></i> Close Job
                       </Button>
                     </>
+                  )}
+                  
+                  {isAdmin && job.status === 'open' && (
+                    <Button 
+                      onClick={() => handleEditJob(job._id)}
+                      className="edit-job-btn"
+                    >
+                      <i className="fas fa-edit"></i> Edit
+                    </Button>
                   )}
                   
                   <Button 

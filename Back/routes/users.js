@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import FreelancerProfile from '../models/Freelancer_profile.js';
 import ClientProfile from '../models/Client_profile.js';
@@ -139,6 +140,30 @@ router.get('/:id/skills', async (req, res) => {
   }
 });
 
+// Get user account info (creation date) - Protected route
+router.get('/:id/account-info', protect, async (req, res) => {
+  try {
+    // Get the requested user ID
+    const userId = req.params.id;
+    
+    // Find the user by ID, but only return createdAt field
+    const user = await User.findById(userId).select('createdAt');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Return the user's account creation date
+    res.json({
+      success: true,
+      createdAt: user.createdAt
+    });
+  } catch (err) {
+    console.error('Error fetching user account info:', err);
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+});
+
 // Create a new user - Admin only
 router.post('/', protect, admin, async (req, res) => {
   try {
@@ -254,15 +279,90 @@ router.put('/update-profile', protect, async (req, res) => {
 // Delete a user - Admin only
 router.delete('/:id', protect, admin, async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    // Import required models if not already imported at the top
+    const Chat = (await import('../models/Chat.js')).default;
+    const Job = (await import('../models/Job.js')).default;
+    const Wallet = (await import('../models/Wallet.js')).default;
     
-    if (!deletedUser) {
+    const userId = req.params.id;
+    
+    // Find user before deletion to get role info
+    const userToDelete = await User.findById(userId);
+    
+    if (!userToDelete) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    res.json({ message: 'User deleted successfully' });
+    // Begin transaction to ensure data consistency
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    try {
+      // 1. Handle chats - Find all chats involving this user
+      const userChats = await Chat.find({ participants: userId }).session(session);
+      console.log(`Found ${userChats.length} chats for user ${userId}`);
+      
+      // Delete all chats where this user was a participant
+      await Chat.deleteMany({ participants: userId }).session(session);
+      
+      // 2. Clean up user profile based on role
+      if (userToDelete.role === 'client') {
+        await ClientProfile.findOneAndDelete({ user: userId }).session(session);
+      } else if (userToDelete.role === 'freelancer') {
+        await FreelancerProfile.findOneAndDelete({ user: userId }).session(session);
+      }
+      
+      // 3. Handle wallet
+      await Wallet.findOneAndDelete({ user: userId }).session(session);
+      
+      // 4. Handle jobs
+      if (userToDelete.role === 'client') {
+        // For client users, find and delete their posted jobs
+        await Job.deleteMany({ client: userId }).session(session);
+      } else if (userToDelete.role === 'freelancer') {
+        // For freelancer users, find jobs they are assigned to
+        const freelancerJobs = await Job.find({ freelancer: userId }).session(session);
+        
+        // Update these jobs to remove freelancer assignment
+        for (const job of freelancerJobs) {
+          job.freelancer = null;
+          job.status = 'open'; // Reset job status
+          await job.save({ session });
+        }
+        
+        // Remove their proposals from all jobs
+        await Job.updateMany(
+          { 'proposals.freelancer': userId },
+          { $pull: { proposals: { freelancer: userId } } }
+        ).session(session);
+      }
+      
+      // 5. Finally delete the user
+      const deletedUser = await User.findByIdAndDelete(userId).session(session);
+      
+      // Commit the transaction
+      await session.commitTransaction();
+      
+      res.json({ 
+        message: 'User deleted successfully',
+        details: {
+          user: deletedUser.name,
+          chatsRemoved: userChats.length
+        }
+      });
+      
+    } catch (error) {
+      // If any operation fails, abort transaction
+      await session.abortTransaction();
+      console.error('Transaction error during user deletion:', error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
+    
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Server error during user deletion', error: error.message });
   }
 });
 

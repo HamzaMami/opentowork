@@ -15,20 +15,23 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key_123');
       
       // Add user data to request object (without password)
       req.user = await User.findById(decoded.id).select('-password');
       
+      if (!req.user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+      
       next();
     } catch (error) {
       console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      return res.status(401).json({ message: 'Not authorized, token failed' });
     }
-  }
-  
-  if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token provided' });
+  } else {
+    // This should only execute if no auth header was found
+    return res.status(401).json({ message: 'Not authorized, no token provided' });
   }
 };
 
