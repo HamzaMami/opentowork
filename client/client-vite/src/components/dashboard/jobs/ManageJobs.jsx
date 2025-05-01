@@ -53,14 +53,14 @@ const ManageJobs = ({ isAdmin = false }) => {
     setIsProcessing(true);
     try {
       await jobsAPI.updateJobStatus(selectedJob._id, { 
-        status: 'closed',
+        status: 'cancelled', // Changed from 'closed' to 'cancelled'
         closureReason: closeReason.trim() || 'Job no longer available'
       });
       
       // Update the job status in the local state
       setJobs(prev => prev.map(job => 
         job._id === selectedJob._id 
-          ? { ...job, status: 'closed', closureReason: closeReason.trim() || 'Job no longer available' } 
+          ? { ...job, status: 'cancelled', closureReason: closeReason.trim() || 'Job no longer available' } 
           : job
       ));
       
@@ -128,6 +128,10 @@ const ManageJobs = ({ isAdmin = false }) => {
 
   const getFilteredJobs = () => {
     if (activeTab === 'all') return jobs;
+    // Special case for 'closed' tab to show jobs with 'cancelled' status
+    if (activeTab === 'closed') {
+      return jobs.filter(job => job.status === 'cancelled');
+    }
     return jobs.filter(job => job.status === activeTab);
   };
 
@@ -136,7 +140,7 @@ const ManageJobs = ({ isAdmin = false }) => {
     open: jobs.filter(job => job.status === 'open').length,
     'in-progress': jobs.filter(job => job.status === 'in-progress').length,
     completed: jobs.filter(job => job.status === 'completed').length,
-    closed: jobs.filter(job => job.status === 'closed').length,
+    closed: jobs.filter(job => job.status === 'cancelled').length, // Fixed: Count 'cancelled' jobs as 'closed'
     all: jobs.length
   };
 

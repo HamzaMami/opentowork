@@ -26,13 +26,15 @@ export const useJobStatus = () => {
   }, []);
 
   const isValidStatusTransition = useCallback((currentStatus, newStatus) => {
+    // Updated to match backend valid transitions
     const validTransitions = {
       'open': ['in-progress', 'cancelled'],
-      'in-progress': ['completed', 'cancelled'],
-      'active': ['completed', 'cancelled'],
-      'ongoing': ['completed', 'cancelled'],
-      'completed': [],
-      'cancelled': []
+      'in-progress': ['completion-pending', 'cancelled'],
+      'active': ['completion-pending', 'cancelled'],
+      'ongoing': ['completion-pending', 'cancelled'],
+      'completion-pending': ['completed', 'in-progress'], // Can go back to in-progress if rejected
+      'completed': [],  // completed is final
+      'cancelled': []   // cancelled is final
     };
 
     return validTransitions[currentStatus]?.includes(newStatus) || false;

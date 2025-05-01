@@ -125,11 +125,17 @@ export const JobCard = ({
                 disabled={isDisabled}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleStatusChange('completed');
+                  // Fix: Use completion-pending instead of direct completed status
+                  handleStatusChange('completion-pending');
                 }}
               >
-                Mark as Completed
+                Complete Project
               </Button>
+            )}
+            {job.status === 'completion-pending' && (
+              <div className="status-message">
+                <i className="fas fa-clock"></i> Waiting for freelancer confirmation
+              </div>
             )}
           </div>
         )}
