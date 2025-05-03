@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { jobsAPI } from '../../api';
+import { jobsAPI, walletAPI } from '../../api';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { getImageUrl, createImageErrorHandler } from '../../utils/imageUtils';
@@ -383,8 +383,42 @@ const ActiveProjects = () => {
   // Handle client initiating project completion
   const handleClientMarkCompleted = async (jobId) => {
     try {
+      // Get the project data to determine payment amount
+      const project = activeProjects.find(proj => proj._id === jobId);
+      if (!project) {
+        alert("Project not found");
+        return;
+      }
+      
+      // Calculate payment amount from project
+      let paymentAmount = 0;
+      const acceptedProposal = project.proposals?.find(p => p.status === 'accepted');
+      
+      if (acceptedProposal && acceptedProposal.price) {
+        paymentAmount = acceptedProposal.price;
+      } else if (project.budget.amount) {
+        paymentAmount = project.budget.amount;
+      } else if (project.budget.min && project.budget.max) {
+        // If no fixed amount, use the average of min and max
+        paymentAmount = (project.budget.min + project.budget.max) / 2;
+      }
+      
+      // Check client's wallet balance first
+      try {
+        const walletResponse = await walletAPI.getWallet();
+        
+        if (!walletResponse.data || walletResponse.data.balance < paymentAmount) {
+          alert(`Insufficient funds in your wallet. You need at least $${paymentAmount.toFixed(2)} to complete this project. Please add funds to your wallet.`);
+          return;
+        }
+      } catch (walletErr) {
+        console.error('Error checking wallet balance:', walletErr);
+        alert('Could not verify wallet balance. Please try again.');
+        return;
+      }
+      
       const confirmed = window.confirm(
-        "Are you sure you want to mark this project as complete? The freelancer will need to confirm completion before the project is finalized."
+        `Are you sure you want to mark this project as complete? The freelancer will need to confirm completion before the project is finalized. $${paymentAmount.toFixed(2)} will be transferred from your wallet upon completion.`
       );
       
       if (!confirmed) return;

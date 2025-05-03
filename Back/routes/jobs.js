@@ -1244,8 +1244,91 @@ router.post('/:jobId/confirm-completion', protect, async (req, res) => {
         job.status = 'completed';
         job.completedAt = new Date();
         
-        // Process payment - removed for brevity
-        // This would be handled by a payment processing function
+        // Process payment from client to freelancer
+        try {
+          // Get the amount to be paid (from the accepted proposal or job budget)
+          let paymentAmount = 0;
+          const acceptedProposal = job.proposals.find(p => p.status === 'accepted');
+          
+          if (acceptedProposal && acceptedProposal.price) {
+            paymentAmount = acceptedProposal.price;
+          } else if (job.budget.amount) {
+            paymentAmount = job.budget.amount;
+          } else if (job.budget.min && job.budget.max) {
+            // If no fixed amount, use the average of min and max
+            paymentAmount = (job.budget.min + job.budget.max) / 2;
+          }
+          
+          if (paymentAmount <= 0) {
+            return res.status(400).json({
+              success: false,
+              message: 'Cannot complete project with invalid payment amount'
+            });
+          }
+          
+          // Get client wallet
+          const clientWallet = await Wallet.findOne({ user: job.client._id });
+          if (!clientWallet) {
+            return res.status(404).json({
+              success: false,
+              message: 'Client wallet not found'
+            });
+          }
+          
+          // Check if client has enough balance
+          if (clientWallet.balance < paymentAmount) {
+            return res.status(400).json({
+              success: false,
+              message: 'Insufficient funds in client wallet'
+            });
+          }
+          
+          // Get or create freelancer wallet
+          let freelancerWallet = await Wallet.findOne({ user: job.freelancer._id });
+          if (!freelancerWallet) {
+            freelancerWallet = new Wallet({ user: job.freelancer._id });
+          }
+          
+          // Create transaction for client (payment)
+          const clientTransaction = {
+            amount: paymentAmount,
+            type: 'payment',
+            status: 'completed',
+            description: `Payment for project: ${job.title}`,
+            reference: `PAY-${job._id}`,
+            relatedProject: job._id
+          };
+          
+          // Create transaction for freelancer (receive)
+          const freelancerTransaction = {
+            amount: paymentAmount,
+            type: 'receive',
+            status: 'completed',
+            description: `Payment received for project: ${job.title}`,
+            reference: `REC-${job._id}`,
+            relatedProject: job._id
+          };
+          
+          // Update balances and add transactions
+          clientWallet.balance -= paymentAmount;
+          clientWallet.transactions.push(clientTransaction);
+          
+          freelancerWallet.balance += paymentAmount;
+          freelancerWallet.transactions.push(freelancerTransaction);
+          
+          // Save both wallets
+          await clientWallet.save();
+          await freelancerWallet.save();
+          
+          console.log(`Payment of $${paymentAmount} processed from client ${job.client.name} to freelancer ${job.freelancer.name}`);
+        } catch (error) {
+          console.error('Error processing payment:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Error processing payment',
+            error: error.message
+          });
+        }
       }
       
       await job.save();
@@ -1253,7 +1336,7 @@ router.post('/:jobId/confirm-completion', protect, async (req, res) => {
       return res.status(200).json({
         success: true,
         message: job.status === 'completed' 
-          ? 'Project completed successfully.' 
+          ? 'Project completed successfully. Payment has been transferred to your wallet.' 
           : 'Project completion confirmed by freelancer. Waiting for client confirmation.',
         data: job
       });

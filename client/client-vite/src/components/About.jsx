@@ -29,7 +29,7 @@ const About = () => {
           <h2>Our Story</h2>
           <p>
             Open to Work was developed as a MERN stack project by <strong>Hamza Mami</strong> and <strong>Ferdaws Chaouch</strong> 
-            during the 2023/2024 academic year at ITBS (Institut Tunisien des Études Bancaires et de la Sécurité). This platform 
+            during the 2024/2025 academic year at ITBS (Institut Tunisien des Études Bancaires et de la Sécurité). This platform 
             was created as part of their academic curriculum, demonstrating their skills in modern web development.
           </p>
           <p>
