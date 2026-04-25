@@ -77,11 +77,10 @@ const walletSchema = new mongoose.Schema({
 });
 
 // Update timestamp when document is modified
-walletSchema.pre('save', function(next) {
+walletSchema.pre('save', async function() {
   if (!this.isNew) {
     this.updatedAt = Date.now();
   }
-  next();
 });
 
 const Wallet = mongoose.model('Wallet', walletSchema);

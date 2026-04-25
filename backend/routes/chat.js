@@ -5,7 +5,7 @@ import User from '../models/User.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { socketIO, getUserSocket } from '../server.js';
+import { socketIO, getUserSocket } from '../socket.js';
 
 const router = express.Router();
 

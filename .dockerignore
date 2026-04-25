@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/build
+**/.vite
+**/.cache
+**/coverage
+**/uploads/chats
+**/.env
+**/.DS_Store
