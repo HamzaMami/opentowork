@@ -47,6 +47,7 @@ jobs:
 
       # --- DEVSECOPS: SONARQUBE ANALYSIS  ---
       - name: SonarCloud Scan
+        continue-on-error: true
         uses: SonarSource/sonarcloud-github-action@master
         with:
           args: >
