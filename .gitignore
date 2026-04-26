@@ -5,3 +5,5 @@
 /.env
 /backend/.env
 /frontend/.env
+/sonar.vars
+/sonar.secrets
