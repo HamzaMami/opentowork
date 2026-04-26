@@ -340,7 +340,14 @@ const ProposalReview = () => {
                                     e.target.onerror = null;
                                     e.target.style.display = 'none';
                                     const initial = getInitial(freelancerName);
-                                    e.target.parentElement.innerHTML = `<div class="freelancer-avatar-placeholder">${initial}</div>`;
+
+                                    const parent = e.target.parentElement;
+                                    if (!parent) return;
+
+                                    const fallback = document.createElement('div');
+                                    fallback.className = 'freelancer-avatar-placeholder';
+                                    fallback.textContent = initial;
+                                    parent.appendChild(fallback);
                                   }}
                                 />
                               ) : (

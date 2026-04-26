@@ -50,6 +50,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         with:
           args: >
+            -Dproject.settings=.github/workflows/sonar-project.properties
             -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
             -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
         env:

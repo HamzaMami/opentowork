@@ -238,7 +238,14 @@ const ProfileHoverCard = forwardRef(({ user, isVisible, position, onMouseEnter, 
               onError={(e) => {
                 console.error('Error loading profile image');
                 e.target.style.display = 'none';
-                e.target.parentNode.innerHTML = `<div class="profile-avatar-placeholder">${displayData.name.charAt(0).toUpperCase()}</div>`;
+
+                const parent = e.target.parentNode;
+                if (!parent) return;
+
+                const fallback = document.createElement('div');
+                fallback.className = 'profile-avatar-placeholder';
+                fallback.textContent = displayData.name.charAt(0).toUpperCase();
+                parent.appendChild(fallback);
               }}
             />
           ) : (

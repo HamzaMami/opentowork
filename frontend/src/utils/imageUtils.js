@@ -46,6 +46,13 @@ export const createImageErrorHandler = (fallbackText, className = "avatar-placeh
   return (e) => {
     console.warn('Image failed to load:', e.target.src);
     e.target.style.display = 'none';
-    e.target.parentNode.innerHTML = `<div class="${className}">${fallbackText || '?'}</div>`;
+
+    const parent = e.target.parentNode;
+    if (!parent) return;
+
+    const fallback = document.createElement('div');
+    fallback.className = className;
+    fallback.textContent = fallbackText || '?';
+    parent.appendChild(fallback);
   };
 };

@@ -4,6 +4,10 @@ import User from '../models/User.js';
 // Middleware to verify user authentication token
 export const protect = async (req, res, next) => {
   let token;
+
+  if (!process.env.JWT_SECRET) {
+    return res.status(500).json({ message: 'Server configuration error' });
+  }
   
   // Check if token exists in headers
   if (
@@ -15,7 +19,7 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key_123');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
       // Add user data to request object (without password)
       req.user = await User.findById(decoded.id).select('-password');

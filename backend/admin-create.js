@@ -9,16 +9,20 @@ dotenv.config();
 
 // Admin user configuration
 const adminUser = {
-  name: 'Admin User',
-  username: 'admin',
-  email: 'admin@opentowork.com',
-  password: 'Admin@123',
+  name: process.env.ADMIN_NAME || 'Admin User',
+  username: process.env.ADMIN_USERNAME || 'admin',
+  email: process.env.ADMIN_EMAIL || 'admin@opentowork.com',
+  password: process.env.ADMIN_PASSWORD,
   role: 'admin'
 };
 
 // Connect to database and create admin user
 const createAdminUser = async () => {
   try {
+    if (!adminUser.password) {
+      throw new Error('ADMIN_PASSWORD is required to create or reset admin user');
+    }
+
     await connectDB();
     console.log('Connected to MongoDB');
     
@@ -31,7 +35,7 @@ const createAdminUser = async () => {
       // Update the admin's password for testing purposes
       existingAdmin.password = adminUser.password;
       await existingAdmin.save();
-      console.log('Admin password reset to:', adminUser.password);
+      console.log('Admin password reset successfully');
       
       process.exit(0);
     }
@@ -50,7 +54,6 @@ const createAdminUser = async () => {
     console.log(`Name: ${adminUser.name}`);
     console.log(`Email: ${adminUser.email}`);
     console.log(`Username: ${adminUser.username}`);
-    console.log(`Password: ${adminUser.password} (unhashed version for login)`);
     console.log(`Role: ${adminUser.role}`);
     
     process.exit(0);
