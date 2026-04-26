@@ -49,6 +49,8 @@ opentowork/
 │   └── frontend/
 │       ├── Dockerfile        # Production frontend image (multi-stage)
 │       └── nginx.conf        # Nginx SPA routing config
+│   └── prometheus/
+│       └── prometheus.yml    # Prometheus scrape configuration
 │
 ├── k8s/                       # Kubernetes manifests (future)
 │   └── README.md             # Deployment guidelines
@@ -168,6 +170,7 @@ This starts:
 - **MongoDB** on `localhost:27017`
 - **Backend API** on `localhost:5000`
 - **Frontend** on `localhost:80`
+- **Prometheus** on `localhost:9090`
 
 Stop the stack:
 ```bash
@@ -232,6 +235,14 @@ Response:
 GET /metrics
 ```
 Returns Prometheus-format metrics for monitoring and alerting.
+
+### Prometheus Monitoring
+
+With Docker Compose running, Prometheus scrapes backend metrics from `backend:5000/metrics`.
+
+- Prometheus UI: `http://localhost:9090`
+- Check targets: `http://localhost:9090/targets`
+- Example query: `process_cpu_user_seconds_total`
 
 ### Authentication
 
