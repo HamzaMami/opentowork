@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: opentowork
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: opentowork-backend:latest 
+        imagePullPolicy: IfNotPresent 
+        ports:
+        - containerPort: 5000
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb:27017/opentowork"
+        - name: JWT_SECRET
+          value: "your_secret_key"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: opentowork
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
